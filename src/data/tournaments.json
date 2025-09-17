@@ -1,0 +1,63 @@
+{
+  "tournaments": [
+    {
+      "id": "1",
+      "name": "Colección soydanirodriguezz 2025 - Temporada Primavera",
+      "description": "Colección oficial de wallpapers para todas las categorías",
+      "startDate": "2025-09-01",
+      "endDate": "2025-11-30",
+      "status": "registration_open",
+      "categories": ["adultos_masculino", "adultos_femenino", "infantil"],
+      "maxTeams": 32,
+      "currentTeams": 1,
+      "registrationDeadline": "2025-08-25",
+      "isActive": true,
+      "createdAt": "2025-08-02T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Colección Digital soydanirodriguezz",
+      "description": "Colección exclusiva de diseños digitales",
+      "startDate": "2025-10-15",
+      "endDate": "2025-12-15",
+      "status": "registration_open",
+      "categories": ["infantil"],
+      "maxTeams": 16,
+      "currentTeams": 0,
+      "registrationDeadline": "2025-10-01",
+      "isActive": true,
+      "createdAt": "2025-08-02T10:00:00Z"
+    },
+    {
+      "id": "3",
+      "name": "Wallpapers Premium soydanirodriguezz",
+      "description": "Wallpapers especializados de alta calidad",
+      "startDate": "2025-11-01",
+      "endDate": "2026-01-31",
+      "status": "registration_open",
+      "categories": ["adultos_femenino"],
+      "maxTeams": 20,
+      "currentTeams": 0,
+      "registrationDeadline": "2025-10-20",
+      "isActive": true,
+      "createdAt": "2025-08-02T10:00:00Z"
+    }
+  ],
+  "registrations": [
+    {
+      "id": "1",
+      "tournamentId": "1",
+      "teamId": "team_001",
+      "registrationDate": "2025-08-02T10:00:00Z",
+      "status": "confirmed",
+      "isActive": true
+    }
+  ],
+  "metadata": {
+    "lastTournamentId": 3,
+    "lastRegistrationId": 1,
+    "totalTournaments": 3,
+    "totalRegistrations": 1,
+    "lastUpdated": "2025-08-02T10:00:00Z"
+  }
+}

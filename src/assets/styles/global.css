@@ -1,0 +1,329 @@
+/* soydanirodriguezz - Paleta de colores centralizada */
+:root {
+  /* Colores principales - Nuevo azul */
+  --primary-blue: #1976d2;      /* Azul principal más moderno */
+  --secondary-blue: #42a5f5;    /* Azul claro */
+  --tertiary-blue: #1565c0;     /* Azul medio */
+  --dark-blue: #0d47a1;         /* Azul oscuro */
+  --white: #ffffff;             /* Blanco */
+  --black: #000000;             /* Negro puro */
+
+  /* Colores adicionales */
+  --light-gray: #f5f5f5;
+  --medium-gray: #757575;
+  --dark-gray: #424242;
+
+  /* Colores de estado */
+  --success: #4caf50;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --info: var(--secondary-blue);
+
+  /* Sombras */
+  --shadow-light: 0 2px 4px rgba(25, 118, 210, 0.1);
+  --shadow-medium: 0 4px 8px rgba(25, 118, 210, 0.15);
+  --shadow-heavy: 0 8px 16px rgba(25, 118, 210, 0.2);
+
+  /* Bordes redondeados */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 20px;
+
+  /* Transiciones */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Variables centralizadas para tema claro */
+  --app-bg-primary: var(--white);
+  --app-bg-secondary: var(--light-gray);
+  --app-text-primary: var(--black);
+  --app-text-secondary: var(--dark-gray);
+  --app-border-color: #e0e0e0;
+  --app-hover-bg: rgba(25, 118, 210, 0.05);
+  --app-input-bg: var(--white);
+  --app-table-header-bg: var(--light-gray);
+  --app-shadow: var(--shadow-light);
+
+  /* Variables adicionales para consistencia */
+  --app-text-on-surface: var(--black);
+  --app-text-muted: var(--medium-gray);
+  --app-surface-elevated: var(--white);
+  --app-border-light: #e0e0e0;
+  --app-accent-text: var(--primary-blue);
+
+  /* Variables específicas para componentes */
+  --app-surface: var(--white);
+  --app-border: #e0e0e0;
+  --app-primary: var(--primary-blue);
+  --app-primary-dark: var(--dark-blue);
+  --app-primary-light: var(--secondary-blue);
+  --app-accent: #ff5722;
+  --app-success: #4caf50;
+  --app-warning: #ff9800;
+  --app-error: #f44336;
+  --app-info: #2196f3;
+}
+
+/* Modo Oscuro */
+:root[data-theme='dark'] {
+  --app-bg-primary: var(--black);
+  --app-bg-secondary: #121212;
+  --app-text-primary: var(--white);
+  --app-text-secondary: rgba(255, 255, 255, 0.87);
+  --app-border-color: rgba(255, 255, 255, 0.12);
+  --app-hover-bg: rgba(25, 118, 210, 0.08);
+  --app-input-bg: rgba(255, 255, 255, 0.05);
+  --app-table-header-bg: rgba(255, 255, 255, 0.05);
+  --app-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+
+  /* Variables adicionales para mejor contraste en modo oscuro */
+  --app-text-on-surface: var(--white);
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-surface-elevated: #1e1e1e;
+  --app-border-light: rgba(255, 255, 255, 0.12);
+  --app-accent-text: var(--secondary-blue);
+
+  /* Variables específicas para componentes */
+  --app-surface: #1e1e1e;
+  --app-border: rgba(255, 255, 255, 0.12);
+  --app-primary: var(--primary-blue);
+  --app-primary-dark: var(--dark-blue);
+  --app-primary-light: var(--secondary-blue);
+  --app-accent: #ff5722;
+  --app-success: #4caf50;
+  --app-warning: #ff9800;
+  --app-error: #f44336;
+  --app-info: #2196f3;
+}
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--app-bg-primary);
+  color: var(--app-text-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Clases utilitarias globales para todos los componentes */
+.app-bg-primary {
+  background-color: var(--app-bg-primary);
+}
+
+.app-bg-secondary {
+  background-color: var(--app-bg-secondary);
+}
+
+.app-text-primary {
+  color: var(--app-text-primary);
+}
+
+.app-text-secondary {
+  color: var(--app-text-secondary);
+}
+
+.app-border {
+  border-color: var(--app-border-color);
+}
+
+/* Estilos base para formularios que funcionan en ambos temas */
+.form-input-base,
+.form-select-base {
+  background: var(--app-input-bg);
+  color: var(--app-text-primary);
+  border: 2px solid var(--app-border-color);
+  transition: border-color var(--transition-normal), background-color var(--transition-normal);
+}
+
+.form-input-base:focus,
+.form-select-base:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 94, 180, 0.1);
+}
+
+/* Estilos base para cards/secciones */
+.card-base {
+  background: var(--app-bg-secondary);
+  border: 1px solid var(--app-border-color);
+  box-shadow: var(--app-shadow);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+/* Estilos base para tablas */
+.table-base {
+  background: var(--app-bg-secondary);
+  color: var(--app-text-primary);
+}
+
+.table-base th {
+  background: var(--app-table-header-bg);
+  color: var(--app-text-primary);
+  border-bottom: 1px solid var(--app-border-color);
+}
+
+.table-base td {
+  border-bottom: 1px solid var(--app-border-color);
+  color: var(--app-text-primary);
+}
+
+.table-base tr:hover {
+  background: var(--app-hover-bg);
+}
+
+/* Componentes de carga */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 43, 96, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--white);
+  border-top: 5px solid var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botones estándar */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background-color: var(--tertiary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-blue);
+  color: var(--white);
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-blue);
+  color: var(--white);
+}
+
+/* Cards */
+.card {
+  background-color: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-light);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+/* Inputs */
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  transition: border-color var(--transition-normal);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 94, 180, 0.1);
+}
+
+/* Utilidades */
+.text-primary { color: var(--primary-blue) !important; }
+.text-secondary { color: var(--secondary-blue) !important; }
+.text-white { color: var(--white) !important; }
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+.bg-primary { background-color: var(--primary-blue) !important; }
+.bg-secondary { background-color: var(--secondary-blue) !important; }
+.bg-white { background-color: var(--white) !important; }
+
+.mt-1 { margin-top: 0.25rem !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mt-4 { margin-top: 1.5rem !important; }
+.mt-5 { margin-top: 3rem !important; }
+
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mb-5 { margin-bottom: 3rem !important; }
+
+.p-1 { padding: 0.25rem !important; }
+.p-2 { padding: 0.5rem !important; }
+.p-3 { padding: 1rem !important; }
+.p-4 { padding: 1.5rem !important; }
+.p-5 { padding: 3rem !important; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
