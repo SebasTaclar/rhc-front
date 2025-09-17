@@ -29,4 +29,3 @@ coverage
 
 *.tsbuildinfo
 public/images/alisador.jpg
-src/services/api/apiConfig.ts
