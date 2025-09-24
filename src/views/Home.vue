@@ -1,14 +1,28 @@
 <template>
   <main class="home-main">
-    <section class="section">
-      <MainBanner @showRules="openRulesModal" />
-    </section>
-    <section id="number-selection" class="section">
-      <NumberSelection @showRules="openRulesModal" />
-    </section>
-    <section class="section">
-      <FAQ />
-    </section>
+  <section id="inicio" class="section">
+    <MainBanner @showRules="openRulesModal" />
+    <StatsBar />
+  </section>
+  <section class="section">
+    <ServicesSection id="servicios" />
+  </section>
+  <section class="section">
+    <AboutSection id="nosotros" />
+  </section>
+  <section class="section">
+    <TestimonialsSection id="testimonios" />
+  </section>
+
+  <section id="contacto" class="section">
+    <ContactSection />
+  </section>
+
+  <section class="section">
+    <CTASection />
+  </section>
+
+
     <section class="section offset">
       <Footer_ />
     </section>
@@ -24,10 +38,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MainBanner from '@/components/MainBanner.vue';
-import NumberSelection from '@/components/NumberSelection.vue';
-import FAQ from '@/components/FAQ.vue';
+import StatsBar from '@/components/StatsBar.vue';
+import ServicesSection from '@/components/ServicesSection.vue';
+import AboutSection from '@/components/AboutSection.vue';
+import TestimonialsSection from '@/components/TestimonialsSection.vue';
+import ContactSection from '@/components/ContactSection.vue';
+import CTASection from '@/components/CTASection.vue';
 import Footer_ from "@/components/Footer_.vue";
-import RulesModal from '@/components/RulesModal.vue';
+
 
 // Estado del modal de reglas
 const showRulesModal = ref(false)

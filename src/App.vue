@@ -4,20 +4,33 @@
       <!-- Logo y marca -->
       <RouterLink class="link-navbar home" to="/" @click="closeMobileMenu">
         <div class="brand-container">
-          <div class="brand-info">
-            <div class="brand-title">DigitalWallpapers<span class="highlight">Moto</span></div>
+          <div class="logo">
+            <div class="logo-image">
+              <img src="/images/logo.jpeg" alt="RHC Asesorías Logo" />
+            </div>
+            <div class="brand-info">
+              <div class="brand-title">RHC Asesorías</div>
+              <div class="brand-subtitle">Finanzas, Contabilidad y Tributaria</div>
+            </div>
           </div>
         </div>
       </RouterLink>
 
       <!-- Navegación principal -->
       <div class="nav-menu desktop-nav">
-        <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Elige Ahora</a>
-        <a href="#faq" class="nav-link " @click="closeMobileMenu">¿Preguntas?</a>
+        <a href="#inicio" class="nav-link">Inicio</a>
+        <a href="#servicios" class="nav-link">Servicios</a>
+        <a href="#nosotros" class="nav-link">Nosotros</a>
+        <a href="#testimonios" class="nav-link">Testimonios</a>
+        <a href="#contacto" class="nav-link">Contacto</a>
       </div>
 
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
+        <!-- Botón principal de asesoría -->
+        <a href="#contacto" class="btn primary-btn">Solicitar Asesoría</a>
+
+        <!-- Controles de login (mantenidos) -->
         <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
         <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Dinámica</RouterLink>
         <RouterLink v-if="isLoggedIn" class="btn purchases-btn" to="/compras">🧾 Compras</RouterLink>
@@ -38,11 +51,15 @@
       <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
         <div class="mobile-menu-content">
           <div class="mobile-nav-links">
-            <a href="#numbers" class="mobile-link" @click="closeMobileMenu; scrollToNumbers()">Números</a>
-            <a href="#compartir" class="mobile-link" @click="closeMobileMenu">Compartir</a>
+            <a href="#inicio" class="mobile-link" @click="closeMobileMenu">Inicio</a>
+            <a href="#servicios" class="mobile-link" @click="closeMobileMenu">Servicios</a>
+            <a href="#nosotros" class="mobile-link" @click="closeMobileMenu">Nosotros</a>
+            <a href="#testimonios" class="mobile-link" @click="closeMobileMenu">Testimonios</a>
+            <a href="#contacto" class="mobile-link" @click="closeMobileMenu">Contacto</a>
           </div>
 
           <div class="mobile-controls">
+            <a href="#contacto" class="mobile-btn primary-btn" @click="closeMobileMenu">Solicitar Asesoría</a>
             <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
               Acceder
             </RouterLink>
@@ -66,8 +83,7 @@
 
   <RouterView />
 
-  <!-- Botones flotantes de redes sociales -->
-  <SocialFloating />
+  <!-- Botones flotantes de redes sociales (SocialFloating removed to avoid duplicate WhatsApp button) -->
 </template>
 
 <script setup lang="ts">
@@ -75,7 +91,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { authService } from '@/services/api';
 import { onMounted, ref, watch, computed } from 'vue';
 import router from './router';
-import SocialFloating from '@/components/SocialFloating.vue';
+// SocialFloating intentionally not used (duplicate WhatsApp button removed)
 
 const isLoggedIn = ref(false);
 const username = ref('');
@@ -91,17 +107,6 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
-};
-
-// Función para hacer scroll a la sección de números
-const scrollToNumbers = () => {
-  const numbersSection = document.getElementById('number-selection');
-  if (numbersSection) {
-    numbersSection.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
 };
 
 const checkAuthStatus = () => {
@@ -133,7 +138,7 @@ watch(route, () => {
 
 <style scoped>
 .navbar {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background-color: #ffffff;
   margin: 0;
   width: 100%;
   display: flex;
@@ -143,35 +148,41 @@ watch(route, () => {
   top: 0;
   left: 0;
   z-index: 1000;
-  height: 70px;
-  padding: 0 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  height: 80px;
+  padding: 0 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 /* Logo y marca */
 .brand-container {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
-.logo-circle {
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-image {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 50%;
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  transition: all 0.3s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.logo-circle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+.logo-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .brand-info {
@@ -181,96 +192,91 @@ watch(route, () => {
 }
 
 .brand-title {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #1f2937;
   line-height: 1.2;
   margin: 0;
 }
 
-.brand-title .highlight {
-  color: #60a5fa;
-  text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
-}
-
 .brand-subtitle {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: #6b7280;
   font-weight: 500;
   line-height: 1;
   margin: 0;
+  white-space: nowrap;
 }
 
 /* Navegación principal */
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 2rem;
   margin-left: auto;
-  margin-right: 30px;
+  margin-right: 2rem;
 }
 
 .nav-link {
-  color: #e2e8f0;
+  color: #374151;
   text-decoration: none;
   font-weight: 500;
-  font-size: 16px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   position: relative;
 }
 
 .nav-link:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.share-btn {
-  background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
-  color: #ffffff !important;
-  font-weight: 600;
-  box-shadow: 0 2px 10px rgba(34, 211, 238, 0.3);
-}
-
-.share-btn:hover {
-  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.5);
-  transform: translateY(-2px);
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.05);
 }
 
 /* Controles de usuario */
 .nav-controls {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 1rem;
 }
 
 .btn {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+}
+
+.primary-btn {
+  background-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn:hover {
+  background-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
 }
 
 .access-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  background: transparent;
+  color: #374151;
+  border: 1px solid #d1d5db;
 }
 
 .access-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
-  transform: translateY(-2px);
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #1f2937;
 }
 
 .logout-btn {
@@ -310,13 +316,13 @@ watch(route, () => {
 }
 
 .user-greeting {
-  color: #e2e8f0;
+  color: #374151;
   font-weight: 600;
-  font-size: 14px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Menu hamburguesa */
@@ -338,7 +344,7 @@ watch(route, () => {
   display: block;
   height: 3px;
   width: 100%;
-  background-color: #ffffff;
+  background-color: #374151;
   border-radius: 3px;
   transition: all 0.3s ease;
 }
@@ -359,15 +365,16 @@ watch(route, () => {
 .mobile-menu {
   display: none;
   position: fixed;
-  top: 70px;
+  top: 80px;
   left: 0;
   width: 100%;
-  height: calc(100vh - 70px);
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  height: calc(100vh - 80px);
+  background-color: #ffffff;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 999;
   overflow-y: auto;
+  border-top: 1px solid #e5e7eb;
 }
 
 .mobile-menu.active {
@@ -375,59 +382,74 @@ watch(route, () => {
 }
 
 .mobile-menu-content {
-  padding: 30px 20px;
+  padding: 2rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 2rem;
 }
 
 .mobile-nav-links {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 0.75rem;
 }
 
 .mobile-link {
-  color: #e2e8f0;
+  color: #374151;
   text-decoration: none;
-  padding: 15px 20px;
-  font-size: 18px;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
   font-weight: 500;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  transition: all 0.2s ease;
   text-align: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
 }
 
 .mobile-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  transform: translateY(-2px);
+  background: rgba(59, 130, 246, 0.05);
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .mobile-controls {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .mobile-btn {
-  padding: 15px 20px;
-  border-radius: 12px;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 0.875rem;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.mobile-btn.primary-btn {
+  background-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-btn.primary-btn:hover {
+  background-color: #2563eb;
 }
 
 .mobile-btn.access-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  background: transparent;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.mobile-btn.access-btn:hover {
+  background-color: #f9fafb;
 }
 
 .mobile-btn.logout-btn {
@@ -439,31 +461,31 @@ watch(route, () => {
 .mobile-btn.admin-btn {
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
 }
 
 .mobile-btn.purchases-btn {
   background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+  box-shadow: 0 2px 6px rgba(96, 165, 250, 0.3);
 }
 
 .mobile-user-greeting {
-  color: #e2e8f0;
+  color: #374151;
   text-align: center;
-  padding: 15px 20px;
+  padding: 1rem 1.25rem;
   font-weight: 600;
-  font-size: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
+  font-size: 0.875rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
     height: 70px;
-    padding: 0 20px;
+    padding: 0 1.25rem;
   }
 
   .desktop-nav {
@@ -476,40 +498,58 @@ watch(route, () => {
 
   .mobile-menu {
     display: block;
+    top: 70px;
+    height: calc(100vh - 70px);
   }
 
   .brand-title {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .brand-subtitle {
-    font-size: 11px;
+    font-size: 0.7rem;
   }
 
-  .logo-circle {
-    width: 45px;
-    height: 45px;
-    font-size: 20px;
+  .logo-image {
+    width: 44px;
+    height: 44px;
+  }
+
+  .logo-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
   }
 }
 
 @media (max-width: 480px) {
   .navbar {
-    padding: 0 15px;
+    padding: 0 1rem;
   }
 
-  .brand-container {
-    gap: 10px;
+  .logo {
+    gap: 0.5rem;
   }
 
   .brand-title {
-    font-size: 16px;
+    font-size: 1rem;
   }
 
-  .logo-circle {
+  .brand-subtitle {
+    font-size: 0.65rem;
+  }
+
+  .logo-image {
     width: 40px;
     height: 40px;
-    font-size: 18px;
+  }
+
+  .logo-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
   }
 }
 

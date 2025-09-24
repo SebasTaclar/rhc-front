@@ -45,6 +45,12 @@ const router = createRouter({
       },
     },
     {
+      path: '/accounting',
+      name: 'client-accounting',
+      component: () => import('@/views/ClientAccounting.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/payment/success',
       name: 'payment-success',
       component: () => import('../views/PaymentSuccess.vue'),
