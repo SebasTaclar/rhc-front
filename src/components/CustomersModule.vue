@@ -1,7 +1,7 @@
 <template>
   <section class="customers-module">
     <div class="module-header">
-      <h2>Clientes</h2>
+
       <p>Administra la lista de clientes: busca, visualiza, edita o exporta.</p>
       <div class="module-actions">
         <input v-model="q" placeholder="Buscar por nombre, email o teléfono" class="search" />

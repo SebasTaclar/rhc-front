@@ -161,15 +161,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref } from 'vue'
 
 const form = reactive({ name: '', email: '', phone: '', message: '' })
 const loading = ref(false)
 const success = ref(false)
 const error = ref<string | null>(null)
-
-const whatsappNumber = '+573200000000'
-const whatsappLink = computed(() => `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`)
 
 const validate = () => {
   if (!form.name || !form.email || !form.message) {

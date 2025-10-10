@@ -32,8 +32,9 @@
 
         <!-- Controles de login (mantenidos) -->
         <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
-        <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Dinámica</RouterLink>
-        <RouterLink v-if="isLoggedIn" class="btn purchases-btn" to="/compras">🧾 Compras</RouterLink>
+  <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Administrador</RouterLink>
+
+  <RouterLink v-if="isLoggedIn" class="btn access-btn" to="/clientes">👥 Clientes</RouterLink>
         <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
         <div v-if="isLoggedIn" class="user-greeting">
           <span>{{ username }}</span>
@@ -67,10 +68,11 @@
               <span>Hola, {{ username }}</span>
             </div>
             <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
-              ⚙️ Dinámica
+              ⚙️ Administrador
             </RouterLink>
-            <RouterLink v-if="isLoggedIn" class="mobile-btn purchases-btn" to="/compras" @click="closeMobileMenu">
-              🧾 Compras
+
+            <RouterLink v-if="isLoggedIn" class="mobile-btn access-btn" to="/clientes" @click="closeMobileMenu">
+              👥 Clientes
             </RouterLink>
             <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
               Cerrar sesión

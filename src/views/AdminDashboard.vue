@@ -1,7 +1,7 @@
 <template>
   <div class="admin-dashboard">
     <div class="dashboard-container">
-      <CustomersModule />
+      <TeamManagementBoard />
     </div>
   </div>
 </template>
@@ -9,7 +9,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/api/authService'
-import CustomersModule from '@/components/CustomersModule.vue'
+import TeamManagementBoard from '@/components/TeamManagementBoard.vue'
 
 const router = useRouter()
 
@@ -20,6 +20,15 @@ if (!authService.isAdmin()) {
 </script>
 
 <style scoped>
-.admin-dashboard { padding: 3rem 0; }
-.dashboard-container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+.admin-dashboard {
+  padding: 3rem 0;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
 </style>
