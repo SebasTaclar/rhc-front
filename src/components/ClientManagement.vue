@@ -25,7 +25,6 @@
       <table class="clients-table">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Razón Social</th>
             <th>NIT</th>
             <th>Teléfono</th>
@@ -38,7 +37,6 @@
         </thead>
         <tbody>
           <tr v-for="client in clients" :key="client.id">
-            <td>{{ client.id }}</td>
             <td><strong>{{ client.businessName }}</strong></td>
             <td>{{ client.nit || '-' }}</td>
             <td>{{ client.phone }}</td>
@@ -67,7 +65,12 @@
               <button @click="viewClient(client)" class="btn-icon" title="Ver detalles">
                 👁️
               </button>
-              <button @click="confirmDelete(client)" class="btn-icon delete" title="Eliminar">
+              <button 
+                v-if="canDeleteClients" 
+                @click="confirmDelete(client)" 
+                class="btn-icon delete" 
+                title="Eliminar"
+              >
                 🗑️
               </button>
             </td>
@@ -320,6 +323,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useClients } from '@/composables/useClients'
+import { useAuth } from '@/composables/useAuth'
 import type { Client } from '@/types/ClientApiType'
 
 const {
@@ -331,6 +335,8 @@ const {
   updateClient,
   deleteClient
 } = useClients()
+
+const { canDeleteClients } = useAuth()
 
 const showModal = ref(false)
 const showViewModal = ref(false)
@@ -490,8 +496,9 @@ const handleDelete = async () => {
 .header h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn {
@@ -591,16 +598,19 @@ const handleDelete = async () => {
 .clients-table th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-weight: 600;
-  color: #475569;
-  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+  font-size: 0.9375rem;
   text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .clients-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.9375rem;
 }
 
 .clients-table tbody tr:hover {
@@ -610,10 +620,10 @@ const handleDelete = async () => {
 .badge {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 700;
   background: #e0e7ff;
-  color: #3730a3;
+  color: #312e81;
 }
 
 .services-list {
@@ -762,27 +772,41 @@ const handleDelete = async () => {
 
 .form-group label {
   display: block;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .required {
-  color: #ef4444;
+  color: #dc2626;
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .form-input,
 .form-select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.9375rem;
-  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   transition: border-color 0.2s;
+  background: white;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.form-select option {
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0.5rem;
 }
 
 .form-input:focus,
@@ -795,8 +819,9 @@ const handleDelete = async () => {
 .form-group small {
   display: block;
   margin-top: 0.25rem;
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
 }
 
 .services-input {

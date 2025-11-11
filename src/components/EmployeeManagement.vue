@@ -2,7 +2,11 @@
   <div class="employee-management">
     <div class="header">
       <h2>Gestión de Empleados</h2>
-      <button @click="openCreateModal" class="btn btn-primary">
+      <button 
+        v-if="canManageEmployees" 
+        @click="openCreateModal" 
+        class="btn btn-primary"
+      >
         <span class="icon">+</span>
         Nuevo Empleado
       </button>
@@ -25,18 +29,15 @@
       <table class="employees-table">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>Email</th>
             <th>Rol</th>
             <th>Estado</th>
-            <th>Usuario ID</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="employee in employees" :key="employee.id" :class="{ inactive: !employee.active }">
-            <td>{{ employee.id }}</td>
             <td>{{ employee.name }}</td>
             <td>{{ employee.email }}</td>
             <td>
@@ -49,19 +50,29 @@
                 {{ employee.active ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td>{{ employee.userId || '-' }}</td>
             <td class="actions">
-              <button @click="openEditModal(employee)" class="btn-icon" title="Editar">
+              <button 
+                v-if="canManageEmployees" 
+                @click="openEditModal(employee)" 
+                class="btn-icon" 
+                title="Editar"
+              >
                 ✏️
               </button>
-              <button 
-                @click="toggleActive(employee)" 
-                class="btn-icon" 
+              <button
+                v-if="canManageEmployees"
+                @click="toggleActive(employee)"
+                class="btn-icon"
                 :title="employee.active ? 'Desactivar' : 'Activar'"
               >
                 {{ employee.active ? '🔒' : '🔓' }}
               </button>
-              <button @click="confirmDelete(employee)" class="btn-icon delete" title="Eliminar">
+              <button 
+                v-if="canManageEmployees" 
+                @click="confirmDelete(employee)" 
+                class="btn-icon delete" 
+                title="Eliminar"
+              >
                 🗑️
               </button>
             </td>
@@ -87,22 +98,22 @@
         <form @submit.prevent="handleSubmit" class="modal-body">
           <div class="form-group">
             <label>Nombre *</label>
-            <input 
-              v-model="formData.name" 
-              type="text" 
-              class="form-input" 
-              required 
+            <input
+              v-model="formData.name"
+              type="text"
+              class="form-input"
+              required
               placeholder="Nombre completo"
             />
           </div>
 
           <div class="form-group">
             <label>Email *</label>
-            <input 
-              v-model="formData.email" 
-              type="email" 
-              class="form-input" 
-              required 
+            <input
+              v-model="formData.email"
+              type="email"
+              class="form-input"
+              required
               placeholder="correo@ejemplo.com"
             />
           </div>
@@ -113,17 +124,6 @@
               <option value="ADMIN">Administrador</option>
               <option value="EMPLOYEE">Empleado</option>
             </select>
-          </div>
-
-          <div class="form-group">
-            <label>Usuario ID (opcional)</label>
-            <input 
-              v-model.number="formData.userId" 
-              type="number" 
-              class="form-input" 
-              placeholder="ID del usuario a vincular"
-            />
-            <small>Dejar vacío para auto-vinculación o null para desvincular</small>
           </div>
 
           <div class="form-group checkbox-group">
@@ -171,6 +171,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useEmployees } from '@/composables/useEmployees'
+import { useAuth } from '@/composables/useAuth'
 import type { Employee } from '@/types/EmployeeType'
 
 const {
@@ -183,6 +184,8 @@ const {
   deleteEmployee,
   toggleEmployeeActive
 } = useEmployees()
+
+const { canManageEmployees } = useAuth()
 
 const showModal = ref(false)
 const showConfirmModal = ref(false)
@@ -298,25 +301,28 @@ const handleDelete = async () => {
 .header h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn {
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
   border: none;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 1rem;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -394,16 +400,19 @@ const handleDelete = async () => {
 .employees-table th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-weight: 600;
-  color: #475569;
-  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+  font-size: 0.9375rem;
   text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .employees-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.9375rem;
 }
 
 .employees-table tbody tr:hover {
@@ -417,36 +426,36 @@ const handleDelete = async () => {
 .badge {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
 .badge.admin {
   background: #dbeafe;
-  color: #1e40af;
+  color: #1e3a8a;
 }
 
 .badge.employee {
   background: #f3e8ff;
-  color: #6b21a8;
+  color: #581c87;
 }
 
 .status-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 
 .status-badge.active {
   background: #dcfce7;
-  color: #166534;
+  color: #14532d;
 }
 
 .status-badge.inactive {
   background: #fee2e2;
-  color: #991b1b;
+  color: #7f1d1d;
 }
 
 .actions {
@@ -526,8 +535,9 @@ const handleDelete = async () => {
 .modal-header h3 {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 700;
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .close-btn {
@@ -560,21 +570,35 @@ const handleDelete = async () => {
 
 .form-group label {
   display: block;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .form-input,
 .form-select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.9375rem;
-  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   transition: border-color 0.2s;
+  background: white;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.form-select option {
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0.5rem;
 }
 
 .form-input:focus,

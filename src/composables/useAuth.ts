@@ -59,11 +59,35 @@ export function useAuth() {
     return role === 'admin' || role === 'supervisor' || role === 'employ'
   })
 
+  // Permisos específicos para empleados (EMPLOYEE role) - case-insensitive
+  const isEmployee = computed(() => {
+    const role = userRole.value?.toLowerCase()
+    return role === 'employee'
+  })
+  
+  // Permisos de eventos
+  const canDeleteEvents = computed(() => !isEmployee.value)
+  
+  // Permisos de tareas
+  const canDeleteTasks = computed(() => !isEmployee.value)
+  
+  // Permisos de clientes
+  const canDeleteClients = computed(() => !isEmployee.value)
+  
+  // Permisos de empleados
+  const canManageEmployees = computed(() => !isEmployee.value) // Crear, editar, borrar
+  
+  // Permisos de tokens
+  const canViewTokens = computed(() => !isEmployee.value)
+  const canViewTokenDetails = computed(() => !isEmployee.value)
+  const canDeleteTokens = computed(() => !isEmployee.value)
+
   return {
     // Estado
     isAuthenticated: computed(() => isAuthenticated.value),
     currentUser: computed(() => currentUser.value),
     isAdmin,
+    isEmployee,
     userRole,
     userName,
 
@@ -73,10 +97,19 @@ export function useAuth() {
     logout,
     hasRole,
 
-    // Permisos
+    // Permisos de acceso
     canAccessFinanciero,
     canAccessOperativo,
     canAccessProducto,
     canAccessRecursosHumanos,
+    
+    // Permisos específicos
+    canDeleteEvents,
+    canDeleteTasks,
+    canDeleteClients,
+    canManageEmployees,
+    canViewTokens,
+    canViewTokenDetails,
+    canDeleteTokens,
   }
 }

@@ -156,6 +156,14 @@ class AuthService {
   }
 
   /**
+   * Verifica si el usuario puede acceder al panel administrativo (admin o employee)
+   */
+  canAccessAdmin(): boolean {
+    const role = this.getUserRole()?.toLowerCase()
+    return role === 'admin' || role === 'employee'
+  }
+
+  /**
    * Obtiene información básica del usuario para mostrar en la UI
    */
   getCurrentUser(): UserInfo | null {

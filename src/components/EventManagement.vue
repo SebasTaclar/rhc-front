@@ -67,7 +67,12 @@
             <button @click="openEditModal(event)" class="btn-icon" title="Editar">
               ✏️
             </button>
-            <button @click="confirmDelete(event)" class="btn-icon danger" title="Eliminar">
+            <button 
+              v-if="canDeleteEvents" 
+              @click="confirmDelete(event)" 
+              class="btn-icon danger" 
+              title="Eliminar"
+            >
               🗑️
             </button>
           </div>
@@ -187,17 +192,49 @@
             </div>
           </div>
 
-          <!-- Asociaciones (placeholder - necesitarías composables de clientes/empleados) -->
+          <!-- Asociaciones -->
           <div class="form-group">
-            <label>👥 Asociar Clientes (Opcional)</label>
-            <p class="form-hint">Los clientes asociados podrán ver este evento en su portal</p>
-            <!-- Aquí irían multi-select de clientes -->
+            <label>👥 Asociar Cliente (Opcional)</label>
+            <select v-model="selectedClientId" class="form-select">
+              <option value="">Ninguno</option>
+              <option v-for="client in clients" :key="client.id" :value="client.id">
+                {{ client.businessName }}
+              </option>
+            </select>
+            <small class="form-hint">El cliente asociado podrá ver este evento en su portal</small>
           </div>
 
           <div class="form-group">
-            <label>👔 Asociar Empleados (Opcional)</label>
-            <p class="form-hint">Los empleados asociados recibirán notificaciones</p>
-            <!-- Aquí irían multi-select de empleados -->
+            <label>
+              👔 Asociar Empleados (Opcional)
+              <span v-if="formData.employeeIds && formData.employeeIds.length > 0" class="selected-count">
+                {{ formData.employeeIds.length }} seleccionado{{ formData.employeeIds.length > 1 ? 's' : '' }}
+              </span>
+            </label>
+            <div class="employees-selection">
+              <label
+                v-for="employee in employees"
+                :key="employee.id"
+                class="employee-option"
+              >
+                <input
+                  type="checkbox"
+                  :value="employee.id"
+                  v-model="formData.employeeIds"
+                  class="employee-checkbox"
+                />
+                <div class="employee-info">
+                  <div class="employee-avatar">
+                    {{ getInitials(employee.name) }}
+                  </div>
+                  <div class="employee-details">
+                    <span class="employee-name">{{ employee.name }}</span>
+                    <span class="employee-role">{{ employee.role }}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <small class="form-hint">Los empleados asociados recibirán notificaciones</small>
           </div>
 
           <div class="form-actions">
@@ -237,11 +274,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useEvents } from '@/composables/useEvents'
+import { useClients } from '@/composables/useClients'
+import { useEmployees } from '@/composables/useEmployees'
+import { useAuth } from '@/composables/useAuth'
 import type { Event, CreateEventRequest, UpdateEventRequest } from '@/types/EventType'
 
 const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } = useEvents()
+const { clients, fetchClients } = useClients()
+const { employees, fetchEmployees } = useEmployees()
+const { canDeleteEvents } = useAuth()
 
 // Filtros
 const searchQuery = ref('')
@@ -254,6 +297,7 @@ const showDeleteModal = ref(false)
 const isEditing = ref(false)
 const submitting = ref(false)
 const eventToDelete = ref<Event | null>(null)
+const selectedClientId = ref<number | string>('')
 
 // Form data
 const formData = ref<CreateEventRequest | UpdateEventRequest>({
@@ -265,6 +309,37 @@ const formData = ref<CreateEventRequest | UpdateEventRequest>({
   isPrivate: true,
   clientIds: [],
   employeeIds: []
+})
+
+// Función para obtener iniciales
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+// Formatear fecha para input datetime-local
+const formatDateTimeLocal = (dateStr: string): string => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+// Watch para sincronizar selectedClientId con clientIds
+watch(selectedClientId, (newVal) => {
+  if (newVal) {
+    formData.value.clientIds = [Number(newVal)]
+  } else {
+    formData.value.clientIds = []
+  }
 })
 
 // Computed
@@ -341,22 +416,34 @@ const openCreateModal = () => {
 
 const openEditModal = (event: Event) => {
   isEditing.value = true
+
+  // Obtener IDs de clientes (del campo directo o extrayendo del objeto)
+  const clientIdsToUse = event.clientIds || event.clients?.map((c) => c.id) || []
+
+  // Obtener IDs de empleados (del campo directo o extrayendo del objeto)
+  const employeeIdsToUse = event.employeeIds || event.employees?.map((e) => e.id) || []
+
   formData.value = {
     title: event.title,
     description: event.description || '',
-    startDate: event.startDate,
-    endDate: event.endDate || '',
+    startDate: formatDateTimeLocal(event.startDate),
+    endDate: formatDateTimeLocal(event.endDate || ''),
     eventType: event.eventType,
     isPrivate: event.isPrivate,
-    clientIds: event.clients?.map((c) => c.id) || [],
-    employeeIds: event.employees?.map((e) => e.id) || []
+    clientIds: clientIdsToUse,
+    employeeIds: employeeIdsToUse
   }
+
+  // Inicializar cliente seleccionado
+  selectedClientId.value = clientIdsToUse.length > 0 ? clientIdsToUse[0] : ''
+
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
   isEditing.value = false
+  selectedClientId.value = ''
   formData.value = {
     title: '',
     description: '',
@@ -409,8 +496,12 @@ const handleDelete = async () => {
 }
 
 // Lifecycle
-onMounted(() => {
-  fetchEvents()
+onMounted(async () => {
+  await Promise.all([
+    fetchEvents(),
+    fetchClients(),
+    fetchEmployees()
+  ])
 })
 </script>
 
@@ -430,8 +521,10 @@ onMounted(() => {
 
 .management-header h2 {
   font-size: 1.8rem;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-create {
@@ -444,9 +537,10 @@ onMounted(() => {
   padding: 0.75rem 1.5rem;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-create:hover {
@@ -473,24 +567,40 @@ onMounted(() => {
 }
 
 .filter-group label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #334155;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .filter-input,
 .filter-select {
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
   font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   transition: border-color 0.2s;
+  background: white;
+}
+
+.filter-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.filter-select option {
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0.5rem;
 }
 
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 /* Loading & Error states */
@@ -500,6 +610,13 @@ onMounted(() => {
   padding: 3rem;
   background: white;
   border-radius: 12px;
+}
+
+.loading-state p {
+  color: #475569;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 1rem;
 }
 
 .spinner {
@@ -519,7 +636,9 @@ onMounted(() => {
 }
 
 .error-state {
-  color: #ef4444;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .error-icon {
@@ -564,9 +683,10 @@ onMounted(() => {
 .event-type-badge {
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .event-type-badge.type-meeting {
@@ -612,12 +732,14 @@ onMounted(() => {
 .event-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0 0 0.75rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .event-description {
-  color: #64748b;
+  color: #475569;
+  font-weight: 500;
   line-height: 1.6;
   margin: 0 0 1rem 0;
   display: -webkit-box;
@@ -638,17 +760,17 @@ onMounted(() => {
 .meta-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
 }
 
 .meta-label {
-  color: #94a3b8;
-  font-weight: 500;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .meta-value {
-  color: #334155;
-  font-weight: 600;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .event-associations {
@@ -663,11 +785,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 
 .association-label {
-  color: #64748b;
+  color: #475569;
+  font-weight: 600;
 }
 
 .association-count {
@@ -675,7 +798,7 @@ onMounted(() => {
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* Empty State */
@@ -694,12 +817,15 @@ onMounted(() => {
 
 .empty-state h3 {
   font-size: 1.4rem;
-  color: #334155;
+  color: #1e293b;
+  font-weight: 700;
   margin: 0 0 0.5rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .empty-state p {
-  color: #64748b;
+  color: #475569;
+  font-weight: 500;
   margin: 0;
 }
 
@@ -748,16 +874,20 @@ onMounted(() => {
 .modal-header h3 {
   margin: 0;
   font-size: 1.5rem;
-  color: #1e293b;
+  font-weight: 700;
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-close {
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   padding: 0.5rem;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
   transition: all 0.2s;
 }
 
@@ -794,9 +924,11 @@ onMounted(() => {
 
 .form-group label {
   display: block;
-  font-weight: 600;
-  color: #334155;
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 0.5rem;
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .form-input,
@@ -804,12 +936,27 @@ onMounted(() => {
 .form-select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
   font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   font-family: inherit;
   transition: border-color 0.2s;
   box-sizing: border-box;
+  background: white;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.form-select option {
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0.5rem;
 }
 
 .form-input:focus,
@@ -817,6 +964,7 @@ onMounted(() => {
 .form-select:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .form-textarea {
@@ -835,21 +983,24 @@ onMounted(() => {
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1rem;
 }
 
 .form-checkbox {
   width: 20px;
   height: 20px;
   cursor: pointer;
+  accent-color: #667eea;
 }
 
 .form-hint {
   display: block;
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.875rem;
+  color: #475569;
   margin-top: 0.25rem;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .form-actions {
@@ -867,7 +1018,7 @@ onMounted(() => {
   padding: 0.75rem 1.5rem;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
@@ -875,16 +1026,19 @@ onMounted(() => {
 
 .btn-cancel {
   background: #f1f5f9;
-  color: #475569;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .btn-cancel:hover {
   background: #e2e8f0;
+  color: #0f172a;
 }
 
 .btn-submit {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-submit:hover:not(:disabled) {
@@ -900,6 +1054,7 @@ onMounted(() => {
 .btn-danger {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -910,6 +1065,92 @@ onMounted(() => {
 .btn-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Estilos para selección de empleados */
+.employees-selection {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: #fafafa;
+  margin-top: 0.5rem;
+}
+
+.employee-option {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.employee-option:hover {
+  background: #f8fafc;
+  border-color: #667eea;
+  transform: translateX(4px);
+}
+
+.employee-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.75rem;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.employee-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.employee-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.employee-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #1e293b;
+}
+
+.employee-role {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.selected-count {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 0.5rem;
 }
 
 /* Responsive */
