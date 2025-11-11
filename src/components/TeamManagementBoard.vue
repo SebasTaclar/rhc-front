@@ -553,27 +553,28 @@ const tasks = computed<Task[]>(() => {
       // Caso 2: El backend solo devuelve employeeIds (SOLUCIÓN TEMPORAL)
       const employeeIds = task.employeeIds
       console.log(`  ⚠️ Solo tenemos employeeIds:`, employeeIds)
-      assignedEmployees = employeeIds
+      const mappedEmployees: (TeamMember | null)[] = employeeIds
         .map(empId => {
           const fullEmployee = employees.value.find(e => e.id === empId)
           if (fullEmployee) {
             console.log(`  ✓ Encontrado empleado por ID: ${fullEmployee.name} (ID: ${empId})`)
-            return {
+            const member: TeamMember = {
               id: empId.toString(),
               name: fullEmployee.name,
               email: fullEmployee.email,
               role: mapEmployeeRole(fullEmployee.role),
-              skills: [],
+              skills: [] as string[],
               location: 'oficina' as const,
               status: 'disponible' as const,
               workload: calculateEmployeeWorkload(empId)
             }
+            return member
           } else {
             console.log(`  ✗ No encontrado empleado con ID: ${empId}`)
             return null
           }
         })
-        .filter((emp): emp is TeamMember => emp !== null)
+      assignedEmployees = mappedEmployees.filter((emp): emp is TeamMember => emp !== null)
     }
 
     // MAPEAR CLIENTE: Si task.clients existe con datos, usarlo. Si no, buscar por clientIds
