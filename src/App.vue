@@ -18,23 +18,15 @@
 
       <!-- Navegación principal -->
       <div class="nav-menu desktop-nav">
-        <a href="#inicio" class="nav-link">Inicio</a>
-        <a href="#servicios" class="nav-link">Servicios</a>
-        <a href="#nosotros" class="nav-link">Nosotros</a>
-        <a href="#testimonios" class="nav-link">Testimonios</a>
-        <a href="#contacto" class="nav-link">Contacto</a>
+        <RouterLink to="/" class="nav-link">Inicio</RouterLink>
+        <RouterLink to="/calendario" class="nav-link">Calendario</RouterLink>
+        <RouterLink to="/acceso-cliente" class="nav-link">Acceso Clientes</RouterLink>
+        <RouterLink v-if="isLoggedIn && isAdmin" to="/acceso-rhc" class="nav-link admin-link">Administración RHC</RouterLink>
       </div>
 
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
-        <!-- Botón principal de asesoría -->
-        <a href="#contacto" class="btn primary-btn">Solicitar Asesoría</a>
-
-        <!-- Controles de login (mantenidos) -->
-        <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
-  <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Administrador</RouterLink>
-
-  <RouterLink v-if="isLoggedIn" class="btn access-btn" to="/clientes">👥 Clientes</RouterLink>
+        <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder RHC</RouterLink>
         <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
         <div v-if="isLoggedIn" class="user-greeting">
           <span>{{ username }}</span>
@@ -52,28 +44,19 @@
       <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
         <div class="mobile-menu-content">
           <div class="mobile-nav-links">
-            <a href="#inicio" class="mobile-link" @click="closeMobileMenu">Inicio</a>
-            <a href="#servicios" class="mobile-link" @click="closeMobileMenu">Servicios</a>
-            <a href="#nosotros" class="mobile-link" @click="closeMobileMenu">Nosotros</a>
-            <a href="#testimonios" class="mobile-link" @click="closeMobileMenu">Testimonios</a>
-            <a href="#contacto" class="mobile-link" @click="closeMobileMenu">Contacto</a>
+            <RouterLink to="/" class="mobile-link" @click="closeMobileMenu">Inicio</RouterLink>
+            <RouterLink to="/calendario" class="mobile-link" @click="closeMobileMenu">Calendario</RouterLink>
+            <RouterLink to="/acceso-cliente" class="mobile-link" @click="closeMobileMenu">Acceso Cliente</RouterLink>
+            <RouterLink v-if="isLoggedIn && isAdmin" to="/acceso-rhc" class="mobile-link" @click="closeMobileMenu">Acceso RHC</RouterLink>
           </div>
 
           <div class="mobile-controls">
-            <a href="#contacto" class="mobile-btn primary-btn" @click="closeMobileMenu">Solicitar Asesoría</a>
             <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
               Acceder
             </RouterLink>
             <div v-if="isLoggedIn" class="mobile-user-greeting">
               <span>Hola, {{ username }}</span>
             </div>
-            <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
-              ⚙️ Administrador
-            </RouterLink>
-
-            <RouterLink v-if="isLoggedIn" class="mobile-btn access-btn" to="/clientes" @click="closeMobileMenu">
-              👥 Clientes
-            </RouterLink>
             <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
               Cerrar sesión
             </RouterLink>
@@ -222,17 +205,38 @@ watch(route, () => {
 .nav-link {
   color: #374151;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
   transition: all 0.2s ease;
   position: relative;
+  border: 2px solid transparent;
 }
 
 .nav-link:hover {
-  color: #3b82f6;
-  background-color: rgba(59, 130, 246, 0.05);
+  color: #667eea;
+  background-color: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.nav-link.router-link-active {
+  color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border-color: #667eea;
+}
+
+.nav-link.admin-link {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.nav-link.admin-link:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 /* Controles de usuario */

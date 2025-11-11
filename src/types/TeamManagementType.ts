@@ -3,7 +3,7 @@ export interface TeamMember {
   name: string
   email: string
   avatar?: string
-  role: 'admin' | 'contador' | 'asistente' | 'becario'
+  role: string // Rol del empleado (viene del backend: 'Administrador' o 'Empleado')
   skills: string[]
   location: 'oficina' | 'remoto' | 'cliente'
   status: 'disponible' | 'ocupado' | 'ausente'
@@ -36,6 +36,8 @@ export interface Task {
   tags: string[]
   comments: TaskComment[]
   attachments: string[]
+  taskTypeId?: number | null
+  eventId?: number | null
 }
 
 export interface TaskComment {
@@ -66,7 +68,7 @@ export interface TaskColumn {
 export interface TaskFilter {
   assignee?: string
   client?: string
-  priority?: Task['priority']
+  priority?: Task['priority'] | ''
   status?: Task['status']
   dateRange?: {
     start: string

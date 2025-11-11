@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="team-management-board">
     <!-- Header con filtros y acciones -->
     <div class="board-header">
@@ -22,26 +22,35 @@
 
       <div class="header-right">
         <div class="filters">
-          <select v-model="filters.assignee" class="filter-select">
-            <option value="">Todos los miembros</option>
-            <option v-for="member in teamMembers" :key="member.id" :value="member.id">
-              {{ member.name }}
-            </option>
-          </select>
+          <div class="filter-group">
+            <label class="filter-label">👥 Miembro:</label>
+            <select v-model="filters.assignee" class="filter-select">
+              <option value="">Todos</option>
+              <option v-for="member in teamMembers" :key="member.id" :value="member.id">
+                {{ member.name }}
+              </option>
+            </select>
+          </div>
 
-          <select v-model="filters.client" class="filter-select">
-            <option value="">Todos los clientes</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.name }}
-            </option>
-          </select>
+          <div class="filter-group">
+            <label class="filter-label">🏢 Cliente:</label>
+            <select v-model="filters.client" class="filter-select">
+              <option value="">Todos</option>
+              <option v-for="client in clients" :key="client.id" :value="client.id">
+                {{ client.name }}
+              </option>
+            </select>
+          </div>
 
-          <select v-model="filters.priority" class="filter-select">
-            <option value="">Todas las prioridades</option>
-            <option value="alta">Alta</option>
-            <option value="media">Media</option>
-            <option value="baja">Baja</option>
-          </select>
+          <div class="filter-group">
+            <label class="filter-label">⚡ Prioridad:</label>
+            <select v-model="filters.priority" class="filter-select">
+              <option value="">Todas</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
         </div>
 
         <button @click="openCreateTaskModal" class="btn btn-primary">
@@ -87,12 +96,22 @@
             }"
             draggable="true"
             @dragstart="onDragStart($event, task)"
-            @click="openTaskModal(task)"
           >
             <div class="task-header">
-              <div class="task-priority">
-                <span class="priority-indicator" :class="`priority-${task.priority}`"></span>
+              <!-- Prioridad Badge con Texto -->
+              <div class="task-priority-header">
+                <div class="task-priority-badge-compact" :class="`priority-badge-${task.priority}`">
+                  <span v-if="task.priority === 'alta'">🔴</span>
+                  <span v-else-if="task.priority === 'media'">🟡</span>
+                  <span v-else>🟢</span>
+                </div>
+                <span class="priority-label" :class="`priority-text-${task.priority}`">
+                  <span v-if="task.priority === 'alta'">Alta</span>
+                  <span v-else-if="task.priority === 'media'">Media</span>
+                  <span v-else>Baja</span>
+                </span>
               </div>
+
               <div class="task-actions">
                 <button @click.stop="openTaskModal(task)" class="task-action-btn">
                   <span class="icon">✏️</span>
@@ -103,33 +122,57 @@
               </div>
             </div>
 
-            <h4 class="task-title">{{ task.title }}</h4>
-            <p class="task-description">{{ task.description }}</p>
-
-            <div class="task-meta">
-              <div class="task-client" v-if="task.client">
-                <span class="client-icon">🏢</span>
-                {{ task.client.name }}
+            <!-- Descripción Tarea -->
+            <div class="task-section">
+              <div class="section-title">
+                <span class="section-icon">📋</span> Descripción Tarea
               </div>
+              <h4 class="task-title">{{ task.title }}</h4>
+              <p class="task-description" v-if="task.description">{{ task.description }}</p>
+            </div>
 
+            <!-- Cliente -->
+            <div class="task-section">
+              <div class="section-title">
+                <span class="section-icon">🏢</span>
+                Cliente
+              </div>
+              <div class="task-client" v-if="task.client">
+                <span class="client-name">{{ task.client.name }}</span>
+              </div>
+              <div class="task-client no-client" v-else>
+                <span class="client-name">Sin cliente asignado</span>
+              </div>
+            </div>
+
+            <!-- Fecha de vencimiento -->
+            <div class="task-section">
+              <div class="section-title">
+                <span class="section-icon">📅</span>
+                Fecha de Vencimiento
+              </div>
               <div class="task-due-date" :class="{ 'overdue': isOverdue(task) }">
-                <span class="date-icon">📅</span>
                 {{ formatDate(task.dueDate) }}
               </div>
             </div>
 
-            <div class="task-assignees">
-              <div
-                v-for="member in task.assignedTo"
-                :key="member.id"
-                class="assignee-avatar"
-                :title="member.name"
-                :class="`status-${member.status}`"
-              >
-                {{ getInitials(member.name) }}
+            <!-- Asignado a -->
+            <div class="task-section">
+              <div class="section-title">
+                <span class="section-icon">👥</span>
+                Asignado a
               </div>
-              <div v-if="task.assignedTo.length === 0" class="no-assignee">
-                Sin asignar
+              <div class="task-assignees-compact">
+                <span
+                  v-for="member in task.assignedTo"
+                  :key="member.id"
+                  class="assignee-name-compact"
+                >
+                  {{ member.name }}
+                </span>
+                <span v-if="task.assignedTo.length === 0" class="no-assignee-compact">
+                  Sin asignar
+                </span>
               </div>
             </div>
 
@@ -167,15 +210,15 @@
       </div>
     </div>
 
-    <!-- Botón flotante para abrir el sidebar cuando está cerrado -->
+    <!-- Botón flotante para toggle del sidebar -->
     <button
-      v-if="!showSidebar"
       @click="toggleSidebar"
       class="floating-sidebar-btn"
-      title="Abrir panel de equipo"
+      :class="{ 'sidebar-closed': !showSidebar }"
+      :title="showSidebar ? 'Cerrar panel de equipo' : 'Abrir panel de equipo'"
     >
-      <span class="floating-icon">👥</span>
-      <span class="floating-badge">{{ teamMembers.length }}</span>
+      <span class="floating-icon">{{ showSidebar ? '✕' : '👥' }}</span>
+      <span v-if="!showSidebar" class="floating-badge">{{ teamMembers.length }}</span>
     </button>
 
     <!-- Panel lateral con información del equipo -->
@@ -253,37 +296,61 @@
               <textarea v-model="taskForm.description" class="form-textarea" rows="3"></textarea>
             </div>
 
-            <div class="form-group">
-              <label>Cliente *</label>
-              <select v-model="taskForm.clientId" class="form-select" required>
-                <option value="">Seleccionar cliente</option>
+            <div class="form-group full-width">
+              <label class="form-label-with-icon">
+                <span class="label-icon">🏢</span>
+                Cliente *
+              </label>
+              <select v-model="taskForm.clientId" class="form-select form-select-client" required>
+                <option value="">Seleccionar cliente...</option>
                 <option v-for="client in clients" :key="client.id" :value="client.id">
                   {{ client.name }}
                 </option>
               </select>
+              <div v-if="taskForm.clientId" class="selected-client-preview">
+                <span class="client-badge">
+                  <span class="badge-icon">✓</span>
+                  Cliente seleccionado: {{ clients.find(c => c.id === taskForm.clientId)?.name }}
+                </span>
+              </div>
             </div>
 
             <div class="form-group">
-              <label>Prioridad</label>
+              <label class="form-label-with-icon">
+                <span class="label-icon">⚡</span>
+                Prioridad
+              </label>
               <select v-model="taskForm.priority" class="form-select">
-                <option value="baja">Baja</option>
-                <option value="media">Media</option>
-                <option value="alta">Alta</option>
+                <option value="baja">🟢 Baja</option>
+                <option value="media">🟡 Media</option>
+                <option value="alta">🔴 Alta</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Fecha de vencimiento *</label>
+              <label class="form-label-with-icon">
+                <span class="label-icon">📅</span>
+                Fecha de vencimiento *
+              </label>
               <input v-model="taskForm.dueDate" type="date" class="form-input" required />
             </div>
 
             <div class="form-group">
-              <label>Horas estimadas</label>
-              <input v-model.number="taskForm.estimatedHours" type="number" class="form-input" min="0" step="0.5" />
+              <label class="form-label-with-icon">
+                <span class="label-icon">⏱️</span>
+                Horas estimadas
+              </label>
+              <input v-model.number="taskForm.estimatedHours" type="number" class="form-input" min="0" step="0.5" placeholder="0" />
             </div>
 
             <div class="form-group full-width">
-              <label>Miembros asignados</label>
+              <label class="form-label-with-icon">
+                <span class="label-icon">👥</span>
+                Asignar empleados
+                <span class="selected-count" v-if="selectedMembersForTask.length > 0">
+                  ({{ selectedMembersForTask.length }} seleccionado{{ selectedMembersForTask.length !== 1 ? 's' : '' }})
+                </span>
+              </label>
               <div class="members-selection">
                 <div v-for="member in teamMembers" :key="member.id" class="member-option">
                   <input
@@ -292,12 +359,16 @@
                     type="checkbox"
                     :value="member.id"
                     :disabled="member.status === 'ausente'"
+                    class="member-checkbox"
                   />
                   <label :for="`modal-member-${member.id}`" class="member-label">
                     <div class="member-avatar-small" :class="`status-${member.status}`">
                       {{ getInitials(member.name) }}
                     </div>
-                    <span>{{ member.name }} ({{ member.role }})</span>
+                    <div class="member-details">
+                      <span class="member-name-text">{{ member.name }}</span>
+                      <span class="member-role-text">{{ member.role }}</span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -319,7 +390,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useTasks } from '@/composables/useTasks'
+import { useEmployees } from '@/composables/useEmployees'
+import { useClients } from '@/composables/useClients'
 import type {
   Task,
   TeamMember,
@@ -328,11 +402,17 @@ import type {
   TaskFilter
 } from '@/types/TeamManagementType'
 
+// Composables
+const { tasks: backendTasks, fetchTasks, createTask: createBackendTask, updateTask: updateBackendTask, deleteTask: deleteBackendTask } = useTasks()
+const { employees, fetchEmployees } = useEmployees()
+const { clients: backendClients, fetchClients } = useClients()
+
 // Estado reactivo
 const showSidebar = ref(true)
 const showTaskModal = ref(false)
 const selectedTask = ref<Task | null>(null)
 const draggedTask = ref<Task | null>(null)
+const isSubmitting = ref(false)
 
 // Estado del formulario de tareas
 const taskForm = ref({
@@ -349,164 +429,215 @@ const selectedMembersForTask = ref<string[]>([])
 const filters = ref<TaskFilter>({
   assignee: '',
   client: '',
-  priority: undefined,
+  priority: '',
   status: undefined
 })
 
-// Datos mock (en producción vendrían de una API)
-const teamMembers = ref<TeamMember[]>([
-  {
-    id: '1',
-    name: 'Ana García',
-    email: 'ana@rhc.com',
-    role: 'contador',
-    skills: ['Contabilidad', 'Auditoría', 'NIIF'],
-    location: 'oficina',
-    status: 'disponible',
-    workload: 75
-  },
-  {
-    id: '2',
-    name: 'Carlos Rodríguez',
-    email: 'carlos@rhc.com',
-    role: 'asistente',
-    skills: ['Nómina', 'Declaraciones', 'SAP'],
-    location: 'remoto',
-    status: 'ocupado',
-    workload: 90
-  },
-  {
-    id: '3',
-    name: 'María López',
-    email: 'maria@rhc.com',
-    role: 'admin',
-    skills: ['Gestión', 'Análisis', 'Reportes'],
-    location: 'cliente',
-    status: 'disponible',
-    workload: 60
-  },
-  {
-    id: '4',
-    name: 'Diego Martín',
-    email: 'diego@rhc.com',
-    role: 'becario',
-    skills: ['Excel', 'Archivo', 'Digitación'],
-    location: 'oficina',
-    status: 'ausente',
-    workload: 45
-  }
-])
+// Mapear rol del backend al formato display
+const mapEmployeeRole = (role: 'ADMIN' | 'EMPLOYEE'): string => {
+  return role === 'ADMIN' ? 'Administrador' : 'Empleado'
+}
 
-const clients = ref<Client[]>([
-  {
-    id: '1',
-    name: 'TechCorp SA',
-    company: 'TechCorp SA',
-    email: 'contact@techcorp.com',
-    phone: '+57 1 234 5678',
-    priority: 'alta',
-    status: 'activo'
-  },
-  {
-    id: '2',
-    name: 'Comercial Andina',
-    company: 'Comercial Andina LTDA',
-    email: 'info@andina.com',
-    phone: '+57 1 987 6543',
-    priority: 'media',
-    status: 'activo'
-  },
-  {
-    id: '3',
-    name: 'Servicios Integrales',
-    company: 'Servicios Integrales SAS',
-    email: 'admin@servicios.com',
-    phone: '+57 1 555 1234',
-    priority: 'baja',
-    status: 'activo'
-  }
-])
+// Mapear empleados del backend a TeamMembers
+const teamMembers = computed<TeamMember[]>(() => {
+  return employees.value.map(emp => ({
+    id: emp.id.toString(),
+    name: emp.name,
+    email: emp.email,
+    role: mapEmployeeRole(emp.role),
+    skills: [], // El backend no tiene skills
+    location: 'oficina' as const,
+    status: 'disponible' as const,
+    workload: calculateEmployeeWorkload(emp.id)
+  }))
+})
 
-const tasks = ref<Task[]>([
-  {
-    id: '1',
-    title: 'Declaración de Renta TechCorp',
-    description: 'Preparar y presentar declaración de renta anual para TechCorp SA',
-    status: 'pendiente',
-    priority: 'alta',
-    assignedTo: [teamMembers.value[0]],
-    clientId: '1',
-    client: clients.value[0],
-    createdAt: '2025-10-01',
-    dueDate: '2025-10-15',
-    estimatedHours: 20,
-    actualHours: 5,
-    tags: ['Renta', 'Anual', 'DIAN'],
-    comments: [],
-    attachments: []
-  },
-  {
-    id: '2',
-    title: 'Conciliación Bancaria Octubre',
-    description: 'Realizar conciliación bancaria mensual de Comercial Andina',
-    status: 'en-progreso',
-    priority: 'media',
-    assignedTo: [teamMembers.value[1]],
-    clientId: '2',
-    client: clients.value[1],
-    createdAt: '2025-10-05',
-    dueDate: '2025-10-12',
-    estimatedHours: 8,
-    actualHours: 3,
-    tags: ['Conciliación', 'Mensual'],
-    comments: [
-      {
-        id: '1',
-        taskId: '2',
-        authorId: '2',
-        author: 'Carlos Rodríguez',
-        content: 'Iniciando revisión de extractos bancarios',
-        createdAt: '2025-10-08'
+// Mapear clientes del backend
+const clients = computed<Client[]>(() => {
+  return backendClients.value.map(client => ({
+    id: client.id.toString(),
+    name: client.businessName,
+    company: client.businessName,
+    email: client.email || '',
+    phone: client.phone,
+    priority: 'media' as const,
+    status: 'activo' as const
+  }))
+})
+
+// Función auxiliar para calcular carga de trabajo
+const calculateEmployeeWorkload = (employeeId: number): number => {
+  const employeeTasks = backendTasks.value.filter(task =>
+    task.employees?.some(emp => emp.id === employeeId) &&
+    (task.status === 'PENDING' || task.status === 'IN_PROGRESS')
+  )
+  const totalHours = employeeTasks.reduce((sum, task) => sum + (task.estimatedHours || 0), 0)
+  return Math.min(100, (totalHours / 40) * 100) // Asumiendo 40h semanales
+}
+
+// Mapear estados del backend a estados del Kanban
+const mapBackendStatusToKanban = (status: string): Task['status'] => {
+  const statusMap: Record<string, Task['status']> = {
+    'PENDING': 'pendiente',
+    'IN_PROGRESS': 'en-progreso',
+    'COMPLETED': 'completado',
+    'CANCELLED': 'completado'
+  }
+  return statusMap[status] || 'pendiente'
+}
+
+const mapKanbanStatusToBackend = (status: Task['status']): string => {
+  const statusMap: Record<Task['status'], string> = {
+    'pendiente': 'PENDING',
+    'en-progreso': 'IN_PROGRESS',
+    'revision': 'IN_PROGRESS',
+    'completado': 'COMPLETED'
+  }
+  return statusMap[status] || 'PENDING'
+}
+
+// Mapear prioridades
+const mapBackendPriorityToKanban = (priority: string): Task['priority'] => {
+  const priorityMap: Record<string, Task['priority']> = {
+    'LOW': 'baja',
+    'MEDIUM': 'media',
+    'HIGH': 'alta',
+    'URGENT': 'alta'
+  }
+  return priorityMap[priority] || 'media'
+}
+
+const mapKanbanPriorityToBackend = (priority: Task['priority']): string => {
+  const priorityMap: Record<Task['priority'], string> = {
+    'baja': 'LOW',
+    'media': 'MEDIUM',
+    'alta': 'HIGH'
+  }
+  return priorityMap[priority] || 'MEDIUM'
+}
+
+// Mapear tareas del backend al formato Kanban
+const tasks = computed<Task[]>(() => {
+  console.log('🔄 Mapeando tareas del backend...')
+  console.log('📦 Backend tasks raw:', backendTasks.value)
+  console.log('👥 Employees disponibles:', employees.value)
+  console.log('🏢 Clientes disponibles:', backendClients.value)
+
+  return backendTasks.value.map(task => {
+    console.log(`\n📋 Procesando tarea "${task.title}":`)
+    console.log('  - Empleados en tarea:', task.employees)
+    console.log('  - Clientes en tarea:', task.clients)
+    console.log('  - ClientIds en tarea:', task.clientIds)
+    console.log('  - EmployeeIds en tarea:', task.employeeIds)
+
+    // MAPEAR EMPLEADOS: Si task.employees existe con datos, usarlo. Si no, buscar por employeeIds
+    let assignedEmployees: TeamMember[] = []
+
+    if (task.employees && task.employees.length > 0 && task.employees[0].name) {
+      // Caso 1: El backend devuelve employees con datos completos
+      assignedEmployees = task.employees.map(emp => {
+        const fullEmployee = employees.value.find(e => e.id === emp.id)
+        console.log(`  ✓ Empleado con datos: ${emp.name} (ID: ${emp.id})`)
+        return {
+          id: emp.id.toString(),
+          name: emp.name,
+          email: fullEmployee?.email || '',
+          role: fullEmployee ? mapEmployeeRole(fullEmployee.role) : 'Empleado',
+          skills: [],
+          location: 'oficina' as const,
+          status: 'disponible' as const,
+          workload: calculateEmployeeWorkload(emp.id)
+        }
+      })
+    } else if (task.employeeIds && task.employeeIds.length > 0) {
+      // Caso 2: El backend solo devuelve employeeIds (SOLUCIÓN TEMPORAL)
+      const employeeIds = task.employeeIds
+      console.log(`  ⚠️ Solo tenemos employeeIds:`, employeeIds)
+      const mappedEmployees: (TeamMember | null)[] = employeeIds
+        .map(empId => {
+          const fullEmployee = employees.value.find(e => e.id === empId)
+          if (fullEmployee) {
+            console.log(`  ✓ Encontrado empleado por ID: ${fullEmployee.name} (ID: ${empId})`)
+            const member: TeamMember = {
+              id: empId.toString(),
+              name: fullEmployee.name,
+              email: fullEmployee.email,
+              role: mapEmployeeRole(fullEmployee.role),
+              skills: [] as string[],
+              location: 'oficina' as const,
+              status: 'disponible' as const,
+              workload: calculateEmployeeWorkload(empId)
+            }
+            return member
+          } else {
+            console.log(`  ✗ No encontrado empleado con ID: ${empId}`)
+            return null
+          }
+        })
+      assignedEmployees = mappedEmployees.filter((emp): emp is TeamMember => emp !== null)
+    }
+
+    // MAPEAR CLIENTE: Si task.clients existe con datos, usarlo. Si no, buscar por clientIds
+    let taskClient: Client | undefined = undefined
+
+    if (task.clients && task.clients.length > 0 && task.clients[0].businessName) {
+      // Caso 1: El backend devuelve clients con datos completos
+      console.log(`  ✓ Cliente con datos: ${task.clients[0].businessName}`)
+      taskClient = {
+        id: task.clients[0].id.toString(),
+        name: task.clients[0].businessName,
+        company: task.clients[0].businessName,
+        email: '',
+        phone: '',
+        priority: 'media' as const,
+        status: 'activo' as const
       }
-    ],
-    attachments: ['extracto_octubre.pdf']
-  },
-  {
-    id: '3',
-    title: 'Auditoría Interna Servicios',
-    description: 'Realizar auditoría interna de procesos contables',
-    status: 'revision',
-    priority: 'alta',
-    assignedTo: [teamMembers.value[0], teamMembers.value[2]],
-    clientId: '3',
-    client: clients.value[2],
-    createdAt: '2025-09-25',
-    dueDate: '2025-10-20',
-    estimatedHours: 40,
-    actualHours: 32,
-    tags: ['Auditoría', 'Interna', 'Procesos'],
-    comments: [],
-    attachments: []
-  },
-  {
-    id: '4',
-    title: 'Archivo Digital Facturas',
-    description: 'Digitalizar y archivar facturas del mes anterior',
-    status: 'completado',
-    priority: 'baja',
-    assignedTo: [teamMembers.value[3]],
-    clientId: '2',
-    client: clients.value[1],
-    createdAt: '2025-09-28',
-    dueDate: '2025-10-05',
-    estimatedHours: 12,
-    actualHours: 10,
-    tags: ['Archivo', 'Digital', 'Facturas'],
-    comments: [],
-    attachments: []
-  }
-])
+    } else if (task.clientIds && task.clientIds.length > 0) {
+      // Caso 2: El backend solo devuelve clientIds (SOLUCIÓN TEMPORAL)
+      const clientId = task.clientIds[0]
+      console.log(`  ⚠️ Solo tenemos clientId:`, clientId)
+      const fullClient = backendClients.value.find(c => c.id === clientId)
+      if (fullClient) {
+        console.log(`  ✓ Encontrado cliente por ID: ${fullClient.businessName} (ID: ${clientId})`)
+        taskClient = {
+          id: clientId.toString(),
+          name: fullClient.businessName,
+          company: fullClient.businessName,
+          email: fullClient.email || '',
+          phone: fullClient.phone,
+          priority: 'media' as const,
+          status: 'activo' as const
+        }
+      } else {
+        console.log(`  ✗ No encontrado cliente con ID: ${clientId}`)
+      }
+    }
 
+    console.log(`  ✅ Resultado - Empleados asignados: ${assignedEmployees.length}, Cliente:`, taskClient?.name || 'Sin cliente')
+
+    return {
+      id: task.id.toString(),
+      title: task.title,
+      description: task.description || '',
+      status: mapBackendStatusToKanban(task.status),
+      priority: mapBackendPriorityToKanban(task.priority),
+      assignedTo: assignedEmployees,
+      clientId: taskClient ? taskClient.id : '',
+      client: taskClient,
+      createdAt: task.createdAt.split('T')[0],
+      dueDate: task.dueDate.split('T')[0],
+      estimatedHours: task.estimatedHours || 0,
+      actualHours: task.actualHours || 0,
+      tags: task.taskType ? [task.taskType.name] : [],
+      comments: [],
+      attachments: [],
+      taskTypeId: task.taskTypeId || null,
+      eventId: task.eventId || null
+    }
+  })
+})
+
+// Definición de columnas Kanban
 const columns = ref<TaskColumn[]>([
   { id: '1', title: 'Pendiente', status: 'pendiente', color: '#64748b', limit: 5 },
   { id: '2', title: 'En Progreso', status: 'en-progreso', color: '#3b82f6', limit: 3 },
@@ -613,51 +744,66 @@ const closeTaskModal = () => {
   selectedTask.value = null
 }
 
-const handleTaskSubmit = () => {
-  const assignedMembers = teamMembers.value.filter(member =>
-    selectedMembersForTask.value.includes(member.id)
-  )
+const handleTaskSubmit = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
 
-  if (selectedTask.value) {
-    // Editar tarea existente
-    const index = tasks.value.findIndex(t => t.id === selectedTask.value!.id)
-    if (index !== -1) {
-      tasks.value[index] = {
-        ...tasks.value[index],
-        ...taskForm.value,
-        assignedTo: assignedMembers,
-        client: clients.value.find(c => c.id === taskForm.value.clientId)
-      }
+  try {
+    const employeeIds = selectedMembersForTask.value.map(id => parseInt(id))
+    const clientIds = taskForm.value.clientId ? [parseInt(taskForm.value.clientId)] : []
+
+    // Convertir fecha al formato ISO esperado por el backend
+    const dueDate = new Date(taskForm.value.dueDate).toISOString()
+
+    if (selectedTask.value) {
+      // Editar tarea existente
+      const priority = mapKanbanPriorityToBackend(taskForm.value.priority)
+      await updateBackendTask(parseInt(selectedTask.value.id), {
+        title: taskForm.value.title,
+        description: taskForm.value.description,
+        priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
+        dueDate,
+        estimatedHours: taskForm.value.estimatedHours || undefined,
+        employeeIds,
+        clientIds
+      })
+    } else {
+      // Crear nueva tarea
+      const priority = mapKanbanPriorityToBackend(taskForm.value.priority)
+      await createBackendTask({
+        title: taskForm.value.title,
+        description: taskForm.value.description,
+        status: 'PENDING',
+        priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
+        dueDate,
+        estimatedHours: taskForm.value.estimatedHours || undefined,
+        employeeIds,
+        clientIds
+      })
     }
-  } else {
-    // Crear nueva tarea
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: taskForm.value.title,
-      description: taskForm.value.description,
-      status: 'pendiente',
-      priority: taskForm.value.priority,
-      assignedTo: assignedMembers,
-      clientId: taskForm.value.clientId,
-      client: clients.value.find(c => c.id === taskForm.value.clientId),
-      createdAt: new Date().toISOString().split('T')[0],
-      dueDate: taskForm.value.dueDate,
-      estimatedHours: taskForm.value.estimatedHours,
-      tags: [],
-      comments: [],
-      attachments: []
-    }
-    tasks.value.push(newTask)
+
+    // Recargar tareas
+    await fetchTasks()
+    closeTaskModal()
+  } catch (error) {
+    console.error('Error al guardar tarea:', error)
+    alert('Error al guardar la tarea. Por favor intente nuevamente.')
+  } finally {
+    isSubmitting.value = false
   }
-  closeTaskModal()
 }
 
-const deleteTask = (taskId: string) => {
-  if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-    const index = tasks.value.findIndex(t => t.id === taskId)
-    if (index !== -1) {
-      tasks.value.splice(index, 1)
-    }
+const deleteTask = async (taskId: string) => {
+  if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+    return
+  }
+
+  try {
+    await deleteBackendTask(parseInt(taskId))
+    await fetchTasks()
+  } catch (error) {
+    console.error('Error al eliminar tarea:', error)
+    alert('Error al eliminar la tarea. Por favor intente nuevamente.')
   }
 }
 
@@ -681,36 +827,69 @@ const onDragEnter = (event: DragEvent) => {
   event.preventDefault()
 }
 
-const onDrop = (event: DragEvent, newStatus: Task['status']) => {
+const onDrop = async (event: DragEvent, newStatus: Task['status']) => {
   event.preventDefault()
 
   if (draggedTask.value && draggedTask.value.status !== newStatus) {
-    const taskIndex = tasks.value.findIndex(t => t.id === draggedTask.value!.id)
-    if (taskIndex !== -1) {
-      tasks.value[taskIndex].status = newStatus
+    const taskId = parseInt(draggedTask.value.id)
+    const backendStatus = mapKanbanStatusToBackend(newStatus)
+
+    try {
+      // Actualizar estado en el backend
+      await updateBackendTask(taskId, {
+        status: backendStatus as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+      })
+
+      // Recargar tareas para reflejar el cambio
+      await fetchTasks()
+    } catch (error) {
+      console.error('Error al actualizar estado de tarea:', error)
+      alert('Error al mover la tarea. Por favor intente nuevamente.')
     }
   }
 
   draggedTask.value = null
 }
 
-onMounted(() => {
-  // Asignar clientes a las tareas
-  tasks.value.forEach(task => {
-    task.client = clients.value.find(c => c.id === task.clientId)
+// Watch para debuggear tareas
+watch(tasks, (newTasks) => {
+  console.log('📋 Tareas actualizadas:', newTasks)
+  newTasks.forEach(task => {
+    if (task.assignedTo && task.assignedTo.length > 0) {
+      console.log(`✅ Tarea "${task.title}" tiene ${task.assignedTo.length} empleado(s) asignado(s):`,
+        task.assignedTo.map(e => ({ name: e.name, role: e.role }))
+      )
+    } else {
+      console.log(`⚠️ Tarea "${task.title}" NO tiene empleados asignados`)
+    }
   })
+}, { immediate: true, deep: true })
+
+onMounted(async () => {
+  // Cargar datos del backend
+  console.log('🔄 Cargando datos del backend...')
+  await Promise.all([
+    fetchEmployees(),  // Cargar empleados PRIMERO
+    fetchClients()
+  ])
+  console.log('👥 Empleados cargados:', employees.value.length, employees.value)
+  console.log('🏢 Clientes cargados:', backendClients.value.length, backendClients.value)
+
+  // Cargar tareas después de tener los empleados
+  await fetchTasks()
+  console.log('📋 Tareas cargadas:', backendTasks.value.length)
+  console.log('📋 Estructura de tareas del backend:', JSON.stringify(backendTasks.value, null, 2))
 })
 </script>
 
 <style scoped>
 .team-management-board {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #f0f4ff;
   display: flex;
   flex-direction: column;
-  margin-right: 10rem; /* Sin margen - las columnas se ajustarán solas */
+  position: relative;
   transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
 }
 
 .team-management-board:has(.team-sidebar:not(.sidebar-open)) {
@@ -749,7 +928,7 @@ onMounted(() => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3b82f6;
+  color: #2563eb;
 }
 
 .stat-label {
@@ -762,47 +941,70 @@ onMounted(() => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .filters {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .filter-select {
   padding: 0.625rem 2.5rem 0.625rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #dbeafe;
   border-radius: 8px;
-  background: white;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: #1f2937;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e40af;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 180px;
+  min-width: 160px;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232563eb' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
-  background-size: 14px;
+  background-size: 12px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
 }
 
 .filter-select:hover {
   border-color: #3b82f6;
-  background-color: #f9fafb;
+  background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: white;
 }
 
 .filter-select option {
   padding: 0.5rem;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: #1f2937;
   background: white;
@@ -832,51 +1034,135 @@ onMounted(() => {
 
 .kanban-board {
   flex: 1;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 columnas iguales siempre visibles */
-  gap: 1.25rem; /* Más espacio entre columnas */
+  display: flex;
+  gap: 1rem;
   padding: 1.5rem;
-  padding-right: 350px; /* Reducido para dar más espacio a las columnas */
-  overflow-x: visible; /* Sin scroll horizontal */
+  padding-right: 340px;
+  overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
   box-sizing: border-box;
+  align-items: stretch;
+  min-height: calc(100vh - 180px);
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
 .kanban-column {
-  background: #f1f5f9;
-  border-radius: 12px;
-  min-height: 500px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+  border-radius: 16px;
+  min-height: 600px;
   display: flex;
   flex-direction: column;
-  width: 100%; /* Ocupa todo el espacio disponible */
-  min-width: 280px; /* Ancho mínimo garantizado más generoso */
+  flex: 0 0 340px;
+  width: 340px;
+  border: 2px solid #e0e7ff;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kanban-column::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kanban-column:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.15), 0 8px 16px -4px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.kanban-column:hover::before {
+  opacity: 1;
 }
 
 .column-over-limit {
-  background: #fef2f2;
-  border: 2px dashed #ef4444;
+  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
+  border: 2px solid #fca5a5;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1), 0 2px 4px -1px rgba(239, 68, 68, 0.06);
+  }
+  50% {
+    box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.2), 0 4px 8px -2px rgba(239, 68, 68, 0.12);
+  }
 }
 
 .column-header {
-  padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #dbeafe;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .column-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e40af;
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .task-count {
-  color: #64748b;
-  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 14px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .column-limit {
   font-size: 0.75rem;
   color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.column-limit::before {
+  content: '⚠️';
+  font-size: 0.875rem;
 }
 
 .column-content {
@@ -884,47 +1170,136 @@ onMounted(() => {
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
   min-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.column-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.column-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.column-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.column-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .task-card {
   background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.2s;
-  border-left: 4px solid transparent;
+  border-radius: 12px;
+  padding: 1.125rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  cursor: grab;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #e0e7ff;
+  position: relative;
+  overflow: hidden;
+}
+
+.task-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  transition: width 0.25s ease;
 }
 
 .task-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15), 0 6px 12px rgba(37, 99, 235, 0.1);
+  border-color: #3b82f6;
+}
+
+.task-card:hover::before {
+  width: 8px;
+}
+
+.task-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
 }
 
 .task-card.priority-alta {
-  border-left-color: #ef4444;
+  border-color: #fca5a5;
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+
+.task-card.priority-alta::before {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
 }
 
 .task-card.priority-media {
-  border-left-color: #f59e0b;
+  border-color: #fcd34d;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.task-card.priority-media::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .task-card.priority-baja {
-  border-left-color: #10b981;
+  border-color: #6ee7b7;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.task-card.priority-baja::before {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
 }
 
 .task-card.overdue {
-  background: #fef2f2;
-  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 .task-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.task-priority-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.priority-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.priority-text-alta {
+  color: #dc2626;
+}
+
+.priority-text-media {
+  color: #f59e0b;
+}
+
+.priority-text-baja {
+  color: #10b981;
 }
 
 .priority-indicator {
@@ -934,9 +1309,9 @@ onMounted(() => {
   display: inline-block;
 }
 
-.priority-indicator.priority-alta { background: #ef4444; }
-.priority-indicator.priority-media { background: #f59e0b; }
-.priority-indicator.priority-baja { background: #10b981; }
+.priority-indicator.priority-alta { background: #1e40af; }
+.priority-indicator.priority-media { background: #3b82f6; }
+.priority-indicator.priority-baja { background: #93c5fd; }
 
 .task-actions {
   display: flex;
@@ -963,78 +1338,307 @@ onMounted(() => {
 }
 
 .task-action-btn.delete:hover {
-  background: #fef2f2;
-  color: #ef4444;
+  background: #fee;
+  color: #1e40af;
 }
 
 .task-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  padding: 0;
+}
+
+.task-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+/* Prioridad Badge Compacta - Solo ícono */
+.task-priority-badge-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   font-size: 0.875rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.task-priority-badge-compact.priority-badge-alta {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 1px solid #fca5a5;
+}
+
+.task-priority-badge-compact.priority-badge-media {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fcd34d;
+}
+
+.task-priority-badge-compact.priority-badge-baja {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 1px solid #6ee7b7;
+}
+
+/* Secciones con Títulos */
+.task-section {
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.section-icon {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Asignados Compactos - 3 por fila */
+.task-assignees-compact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+}
+
+.assignee-name-compact {
+  font-size: 0.7rem;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 0.5rem;
-  line-height: 1.3;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 0.375rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+}
+
+.assignee-name-compact:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.no-assignee-compact {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 500;
+  text-align: center;
+  padding: 0.375rem 0.5rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.priority-badge-alta {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.priority-badge-media {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.priority-badge-baja {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
 }
 
 .task-description {
   font-size: 0.75rem;
   color: #64748b;
   line-height: 1.4;
-  margin-bottom: 0.75rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.task-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.75rem;
+.task-client {
+  font-weight: 600;
+  color: #1e40af;
   font-size: 0.75rem;
+  line-height: 1.2;
 }
 
-.task-client, .task-due-date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+.task-client.no-client {
   color: #64748b;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.client-icon {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.client-name {
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-due-date {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.date-icon {
+  font-size: 0.875rem;
 }
 
 .task-due-date.overdue {
-  color: #ef4444;
+  color: #dc2626;
   font-weight: 600;
 }
 
-.task-assignees {
-  display: flex;
-  gap: 0.25rem;
+.task-assignees-section {
   margin-bottom: 0.75rem;
-  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
 }
 
-.assignee-avatar {
-  width: 24px;
-  height: 24px;
+.assignees-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.625rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+}
+
+.label-icon {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.label-text {
+  line-height: 1;
+  color: #64748b;
+}
+
+.task-assignees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assignee-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.assignee-item:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+  transform: translateX(2px);
+}
+
+.assignee-avatar-mini {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+  letter-spacing: -0.5px;
 }
 
-.assignee-avatar.status-ocupado {
-  background: #ef4444;
+.assignee-avatar-mini.status-ocupado {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.assignee-avatar.status-ausente {
-  background: #64748b;
+.assignee-avatar-mini.status-ausente {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   opacity: 0.6;
 }
 
+.assignee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.assignee-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assignee-role {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
 .no-assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #94a3b8;
   font-style: italic;
+  font-weight: 500;
+  padding: 0.375rem 0.5rem;
+}
+
+.no-assignee-icon {
+  font-size: 0.875rem;
+  opacity: 0.6;
 }
 
 .task-tags {
@@ -1045,8 +1649,8 @@ onMounted(() => {
 }
 
 .task-tag {
-  background: #e5e7eb;
-  color: #374151;
+  background: #dbeafe;
+  color: #1e40af;
   padding: 0.125rem 0.375rem;
   border-radius: 12px;
   font-size: 0.625rem;
@@ -1068,33 +1672,68 @@ onMounted(() => {
 }
 
 .actual-hours {
-  color: #10b981;
+  color: #2563eb;
   font-weight: 600;
 }
 
 .drop-zone {
-  border: 2px dashed #3b82f6;
-  border-radius: 8px;
-  padding: 1rem;
+  border: 3px dashed #3b82f6;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
   text-align: center;
-  color: #3b82f6;
-  font-weight: 500;
-  background: rgba(59, 130, 246, 0.05);
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.12) 100%);
+  margin: 0.5rem 0;
+  animation: dropZonePulse 1.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.drop-zone::before {
+  content: '⬇️';
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes dropZonePulse {
+  0%, 100% {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.12) 100%);
+  }
+  50% {
+    border-color: #2563eb;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(29, 78, 216, 0.16) 100%);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .team-sidebar {
-  position: fixed;
+  position: absolute;
   right: 0;
-  top: 80px; /* Debajo del navbar principal */
-  height: calc(100vh - 80px);
-  width: 320px; /* Ancho del sidebar */
+  top: 0;
+  height: 100%;
+  width: 320px;
   background: white;
   border-left: 2px solid #e5e7eb;
-  transform: translateX(0); /* Visible por defecto */
+  transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
   overflow-y: auto;
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
 }
 
 .team-sidebar:not(.sidebar-open) {
@@ -1113,7 +1752,7 @@ onMounted(() => {
   align-items: center;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   position: sticky;
-  top: 80px; /* Debajo de la navbar */
+  top: 0;
   z-index: 10;
 }
 
@@ -1158,12 +1797,11 @@ onMounted(() => {
   display: block;
 }
 
-/* Botón flotante cuando el sidebar está cerrado */
+/* Botón flotante - siempre visible */
 .floating-sidebar-btn {
   position: fixed;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 400px; /* Más separación del sidebar cuando está abierto */
+  bottom: 2rem;
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   width: 56px;
@@ -1176,19 +1814,23 @@ onMounted(() => {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-  z-index: 45; /* Menor que el sidebar */
+  z-index: 45;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-sidebar-btn.sidebar-closed {
+  right: 1.5rem; /* Se mueve a la derecha cuando el sidebar está cerrado */
   animation: floatPulse 3s infinite;
 }
 
 .floating-sidebar-btn:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   box-shadow: 0 8px 28px rgba(59, 130, 246, 0.5);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
 }
 
 .floating-sidebar-btn:active {
-  transform: translateY(-50%) scale(1.05);
+  transform: scale(1.05);
 }
 
 .floating-icon {
@@ -1201,7 +1843,7 @@ onMounted(() => {
   position: absolute;
   top: 2px;
   right: 2px;
-  background: #ef4444;
+  background: #1e40af;
   color: white;
   font-size: 0.625rem;
   font-weight: 700;
@@ -1215,11 +1857,10 @@ onMounted(() => {
 @keyframes floatPulse {
   0%, 100% {
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-    transform: translateY(-50%);
   }
   50% {
     box-shadow: 0 8px 28px rgba(59, 130, 246, 0.6);
-    transform: translateY(-50%) translateY(-4px);
+    transform: translateY(-4px);
   }
 }
 
@@ -1230,33 +1871,36 @@ onMounted(() => {
 
 .team-list {
   padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .team-member {
-  background: #f8fafc;
+  background: white;
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
-  border-left: 4px solid #e2e8f0;
+  border-left: 4px solid #e0e7ff;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
 }
 
 .team-member.status-disponible {
-  border-left-color: #10b981;
+  border-left-color: #3b82f6;
 }
 
 .team-member.status-ocupado {
-  border-left-color: #f59e0b;
+  border-left-color: #1e40af;
 }
 
 .team-member.status-ausente {
-  border-left-color: #ef4444;
+  border-left-color: #93c5fd;
 }
 
 .member-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -1308,9 +1952,9 @@ onMounted(() => {
   transition: width 0.3s ease;
 }
 
-.workload-fill.workload-low { background: #10b981; }
-.workload-fill.workload-medium { background: #f59e0b; }
-.workload-fill.workload-high { background: #ef4444; }
+.workload-fill.workload-low { background: #93c5fd; }
+.workload-fill.workload-medium { background: #3b82f6; }
+.workload-fill.workload-high { background: #1e40af; }
 
 .workload-text {
   font-size: 0.75rem;
@@ -1333,18 +1977,18 @@ onMounted(() => {
 }
 
 .member-status.status-disponible {
-  background: #dcfce7;
-  color: #166534;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .member-status.status-ocupado {
-  background: #fef3c7;
-  color: #92400e;
+  background: #bfdbfe;
+  color: #1e3a8a;
 }
 
 .member-status.status-ausente {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #e0e7ff;
+  color: #3730a3;
 }
 
 /* Responsive design */
@@ -1367,9 +2011,13 @@ onMounted(() => {
   }
 
   .floating-sidebar-btn {
-    right: 1rem;
+    right: 320px;
     width: 48px;
     height: 48px;
+  }
+
+  .floating-sidebar-btn.sidebar-closed {
+    right: 1rem;
   }
 
   .floating-icon {
@@ -1414,18 +2062,29 @@ onMounted(() => {
   .header-right {
     width: 100%;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
   }
 
   .filters {
     width: 100%;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-label {
+    font-size: 0.7rem;
+    margin-bottom: 0.375rem;
   }
 
   .filter-select {
     width: 100%;
     min-width: unset;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 0.875rem;
   }
 
   .btn-primary {
@@ -1478,6 +2137,10 @@ onMounted(() => {
     transform: none;
     width: 56px;
     height: 56px;
+  }
+
+  .floating-sidebar-btn.sidebar-closed {
+    right: 1rem;
   }
 
   .floating-sidebar-btn:hover {
@@ -1637,23 +2300,96 @@ onMounted(() => {
 }
 
 .form-group label {
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: #1e293b;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
+}
+
+.form-label-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.label-icon {
+  font-size: 1rem;
+}
+
+.selected-count {
+  font-size: 0.75rem;
+  color: #2563eb;
+  font-weight: 500;
+  background: #dbeafe;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
 }
 
 .form-input,
 .form-select,
 .form-textarea {
   padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #e0e7ff;
   border-radius: 8px;
   font-size: 0.9375rem;
   font-weight: 500;
   color: #1f2937;
   background: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+}
+
+.form-select-client {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border-color: #93c5fd;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.selected-client-preview {
+  margin-top: 0.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.client-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 2px solid #93c5fd;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+}
+
+.badge-icon {
+  background: #2563eb;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
 }
 
 .form-select {
@@ -1695,49 +2431,93 @@ onMounted(() => {
 
 .members-selection {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px solid #e0e7ff;
 }
 
 .member-option {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e0e7ff;
+  transition: all 0.2s ease;
 }
 
-.member-option input[type="checkbox"] {
+.member-option:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.member-checkbox {
   margin: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.member-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .member-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
+  flex: 1;
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.member-name-text {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.member-role-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: capitalize;
 }
 
 .member-avatar-small {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .member-avatar-small.status-ocupado {
-  background: #f59e0b;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
 }
 
 .member-avatar-small.status-ausente {
-  background: #64748b;
-  opacity: 0.6;
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+  opacity: 0.7;
 }
 
 .modal-footer {

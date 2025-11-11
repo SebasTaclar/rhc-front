@@ -59,7 +59,7 @@ const handleLogin = async () => {
       const userInfo = authService.getCurrentUser();
 
       if (userInfo?.role === 'admin') {
-        router.push('/admin');
+        router.push('/acceso-rhc');
       } else {
         router.push('/');
       }

@@ -8,6 +8,12 @@ export * from './teamService'
 export * from './tournamentService'
 export * from './paymentService'
 export * from './wallpaperService'
+export * from './employeeService'
+export * from './clientService'
+export * from './taskTypeService'
+export * from './clientTokenService'
+export * from './eventService'
+export * from './taskService'
 
 // Exportar tipos comunes
 export type { ApiResponse, ApiError } from './apiConfig'
