@@ -7,9 +7,6 @@
   <section class="section">
     <ServicesSection id="servicios" />
   </section>
-  <section id="calendario" class="section">
-    <TaxCalendarSection />
-  </section>
   <section id="noticias" class="section">
     <NewsSection />
   </section>
@@ -46,7 +43,6 @@ import { ref } from 'vue'
 import MainBanner from '@/components/MainBanner.vue';
 import StatsBar from '@/components/StatsBar.vue';
 import ServicesSection from '@/components/ServicesSection.vue';
-import TaxCalendarSection from '@/components/TaxCalendarSection.vue';
 import NewsSection from '@/components/NewsSection.vue';
 import AboutSection from '@/components/AboutSection.vue';
 import TestimonialsSection from '@/components/TestimonialsSection.vue';

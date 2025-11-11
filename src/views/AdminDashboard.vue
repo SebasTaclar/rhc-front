@@ -1,17 +1,78 @@
 <template>
   <div class="admin-dashboard">
     <div class="dashboard-container">
-      <TeamManagementBoard />
+      <!-- Pestañas de navegación -->
+      <div class="tabs">
+        <button
+          @click="activeTab = 'teams'"
+          class="tab"
+          :class="{ active: activeTab === 'teams' }"
+        >
+          👥 Gestión de Equipos
+        </button>
+        <button
+          @click="activeTab = 'employees'"
+          class="tab"
+          :class="{ active: activeTab === 'employees' }"
+        >
+          🧑‍💼 Empleados
+        </button>
+        <button
+          @click="activeTab = 'clients'"
+          class="tab"
+          :class="{ active: activeTab === 'clients' }"
+        >
+          🏢 Clientes
+        </button>
+        <button
+          @click="activeTab = 'taskTypes'"
+          class="tab"
+          :class="{ active: activeTab === 'taskTypes' }"
+        >
+          📋 Tipos de Tarea
+        </button>
+        <button
+          @click="activeTab = 'clientTokens'"
+          class="tab"
+          :class="{ active: activeTab === 'clientTokens' }"
+        >
+          🔐 Tokens de Cliente
+        </button>
+        <button
+          @click="activeTab = 'health'"
+          class="tab"
+          :class="{ active: activeTab === 'health' }"
+        >
+          🏥 Estado del Sistema
+        </button>
+      </div>
+
+      <!-- Contenido según la pestaña activa -->
+      <div class="tab-content">
+        <TeamManagementBoard v-if="activeTab === 'teams'" />
+        <EmployeeManagement v-if="activeTab === 'employees'" />
+        <ClientManagement v-if="activeTab === 'clients'" />
+        <TaskTypeManagement v-if="activeTab === 'taskTypes'" />
+        <ClientTokenManagement v-if="activeTab === 'clientTokens'" />
+        <SystemHealthMonitor v-if="activeTab === 'health'" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/api/authService'
 import TeamManagementBoard from '@/components/TeamManagementBoard.vue'
+import EmployeeManagement from '@/components/EmployeeManagement.vue'
+import ClientManagement from '@/components/ClientManagement.vue'
+import TaskTypeManagement from '@/components/TaskTypeManagement.vue'
+import ClientTokenManagement from '@/components/ClientTokenManagement.vue'
+import SystemHealthMonitor from '@/components/SystemHealthMonitor.vue'
 
 const router = useRouter()
+const activeTab = ref<'teams' | 'employees' | 'clients' | 'taskTypes' | 'clientTokens' | 'health'>('clientTokens')
 
 // Admin guard
 if (!authService.isAdmin()) {
@@ -29,6 +90,66 @@ if (!authService.isAdmin()) {
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 5rem 1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tab {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab:hover {
+  color: #3b82f6;
+  background: #f8fafc;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: white;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
 }
 </style>

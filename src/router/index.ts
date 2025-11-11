@@ -57,6 +57,25 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/calendario',
+      name: 'calendar',
+      component: () => import('../views/CalendarView.vue'),
+    },
+    {
+      path: '/acceso-cliente',
+      name: 'client-access',
+      component: () => import('../views/ClientAccessView.vue'),
+    },
+    {
+      path: '/acceso-rhc',
+      name: 'rhc-access',
+      component: () => import('../views/RHCAccessView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'admin',
+      },
+    },
+    {
       path: '/payment/success',
       name: 'payment-success',
       component: () => import('../views/PaymentSuccess.vue'),
