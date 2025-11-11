@@ -21,7 +21,7 @@
         <RouterLink to="/" class="nav-link">Inicio</RouterLink>
         <RouterLink to="/calendario" class="nav-link">Calendario</RouterLink>
         <RouterLink to="/acceso-cliente" class="nav-link">Acceso Clientes</RouterLink>
-        <RouterLink v-if="isLoggedIn && isAdmin" to="/acceso-rhc" class="nav-link admin-link">Administración RHC</RouterLink>
+        <RouterLink v-if="isLoggedIn && canAccessAdmin" to="/acceso-rhc" class="nav-link admin-link">Administración RHC</RouterLink>
       </div>
 
       <!-- Controles de usuario -->
@@ -47,7 +47,7 @@
             <RouterLink to="/" class="mobile-link" @click="closeMobileMenu">Inicio</RouterLink>
             <RouterLink to="/calendario" class="mobile-link" @click="closeMobileMenu">Calendario</RouterLink>
             <RouterLink to="/acceso-cliente" class="mobile-link" @click="closeMobileMenu">Acceso Cliente</RouterLink>
-            <RouterLink v-if="isLoggedIn && isAdmin" to="/acceso-rhc" class="mobile-link" @click="closeMobileMenu">Acceso RHC</RouterLink>
+            <RouterLink v-if="isLoggedIn && canAccessAdmin" to="/acceso-rhc" class="mobile-link" @click="closeMobileMenu">Acceso RHC</RouterLink>
           </div>
 
           <div class="mobile-controls">
@@ -82,8 +82,13 @@ const isLoggedIn = ref(false);
 const username = ref('');
 const isMobileMenuOpen = ref(false);
 
-// Verificar si el usuario es administrador
-const isAdmin = computed(() => authService.isAdmin());
+// Verificar si el usuario puede acceder a administración (admin o empleado)
+const canAccessAdmin = computed(() => {
+  const userRole = authService.getUserRole();
+  // Comparar en minúsculas para evitar problemas de case sensitivity
+  const roleLower = userRole?.toLowerCase();
+  return roleLower === 'admin' || roleLower === 'employee';
+});
 
 // Funciones para el menú hamburguesa
 const toggleMobileMenu = () => {

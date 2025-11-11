@@ -32,18 +32,12 @@
           📋 Tipos de Tarea
         </button>
         <button
+          v-if="canViewTokens"
           @click="activeTab = 'clientTokens'"
           class="tab"
           :class="{ active: activeTab === 'clientTokens' }"
         >
           🔐 Tokens de Cliente
-        </button>
-        <button
-          @click="activeTab = 'health'"
-          class="tab"
-          :class="{ active: activeTab === 'health' }"
-        >
-          🏥 Estado del Sistema
         </button>
       </div>
 
@@ -53,8 +47,7 @@
         <EmployeeManagement v-if="activeTab === 'employees'" />
         <ClientManagement v-if="activeTab === 'clients'" />
         <TaskTypeManagement v-if="activeTab === 'taskTypes'" />
-        <ClientTokenManagement v-if="activeTab === 'clientTokens'" />
-        <SystemHealthMonitor v-if="activeTab === 'health'" />
+        <ClientTokenManagement v-if="activeTab === 'clientTokens' && canViewTokens" />
       </div>
     </div>
   </div>
@@ -64,18 +57,19 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/api/authService'
+import { useAuth } from '@/composables/useAuth'
 import TeamManagementBoard from '@/components/TeamManagementBoard.vue'
 import EmployeeManagement from '@/components/EmployeeManagement.vue'
 import ClientManagement from '@/components/ClientManagement.vue'
 import TaskTypeManagement from '@/components/TaskTypeManagement.vue'
 import ClientTokenManagement from '@/components/ClientTokenManagement.vue'
-import SystemHealthMonitor from '@/components/SystemHealthMonitor.vue'
 
 const router = useRouter()
-const activeTab = ref<'teams' | 'employees' | 'clients' | 'taskTypes' | 'clientTokens' | 'health'>('clientTokens')
+const { canViewTokens } = useAuth()
+const activeTab = ref<'teams' | 'employees' | 'clients' | 'taskTypes' | 'clientTokens'>('teams')
 
-// Admin guard
-if (!authService.isAdmin()) {
+// Admin guard - Permitir admin y empleados
+if (!authService.canAccessAdmin()) {
   router.push('/')
 }
 </script>
@@ -105,8 +99,8 @@ if (!authService.isAdmin()) {
   background: none;
   border: none;
   font-size: 1rem;
-  font-weight: 500;
-  color: #64748b;
+  font-weight: 700;
+  color: #475569;
   cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: all 0.2s;
@@ -116,14 +110,15 @@ if (!authService.isAdmin()) {
 }
 
 .tab:hover {
-  color: #3b82f6;
+  color: #2563eb;
   background: #f8fafc;
 }
 
 .tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
   background: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .tab-content {

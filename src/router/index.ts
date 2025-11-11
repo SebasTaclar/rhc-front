@@ -33,7 +33,7 @@ const router = createRouter({
       component: () => import('../views/AdminDashboard.vue'),
       meta: {
         requiresAuth: true,
-        requiredRole: 'admin', // Solo accesible para administradores
+        requiredRoles: ['admin', 'ADMIN', 'employee', 'EMPLOYEE'], // Accesible para administradores y empleados (case-insensitive)
       },
     },
     {
@@ -72,7 +72,7 @@ const router = createRouter({
       component: () => import('../views/RHCAccessView.vue'),
       meta: {
         requiresAuth: true,
-        requiredRole: 'admin',
+        requiredRoles: ['admin', 'ADMIN', 'employee', 'EMPLOYEE'], // Accesible para administradores y empleados (case-insensitive)
       },
     },
     {
@@ -104,10 +104,15 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated()
   const userRole = authService.getUserRole()
 
+  console.log('🛣️ Router Guard - Route:', to.path)
+  console.log('🛣️ Router Guard - User role:', userRole)
+  console.log('🛣️ Router Guard - Required roles:', to.meta.requiredRoles)
+
   // Si la ruta requiere estar autenticado
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
       // Redirigir al login si no está autenticado
+      console.log('🛣️ Router Guard - Not authenticated, redirecting to login')
       next('/login')
       return
     }
@@ -115,15 +120,29 @@ router.beforeEach((to, from, next) => {
     // Verificar rol específico si se requiere
     if (to.meta.requiredRole && userRole !== to.meta.requiredRole) {
       // Redirigir a home si no tiene el rol requerido
+      console.log('🛣️ Router Guard - Role mismatch (requiredRole), redirecting to home')
       next('/')
       return
     }
 
-    // Verificar múltiples roles si se requiere
-    if (to.meta.requiredRoles && (!userRole || !to.meta.requiredRoles.includes(userRole))) {
-      // Redirigir a home si no tiene ninguno de los roles requeridos
-      next('/')
-      return
+    // Verificar múltiples roles si se requiere (case-insensitive)
+    if (to.meta.requiredRoles) {
+      if (!userRole) {
+        console.log('🛣️ Router Guard - No user role, redirecting to home')
+        next('/')
+        return
+      }
+      
+      const userRoleLower = userRole.toLowerCase()
+      const requiredRolesLower = to.meta.requiredRoles.map((r: string) => r.toLowerCase())
+      
+      if (!requiredRolesLower.includes(userRoleLower)) {
+        console.log('🛣️ Router Guard - Role not in requiredRoles, redirecting to home')
+        console.log('🛣️ User role (lower):', userRoleLower)
+        console.log('🛣️ Required roles (lower):', requiredRolesLower)
+        next('/')
+        return
+      }
     }
   }
 

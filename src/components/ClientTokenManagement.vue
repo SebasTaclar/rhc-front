@@ -121,6 +121,7 @@
               {{ token.isActive ? '🔒' : '🔓' }}
             </button>
             <button
+              v-if="canDeleteTokens"
               class="action-btn delete"
               @click="handleDelete(token)"
               title="Eliminar"
@@ -139,8 +140,8 @@
           </div>
         </div>
 
-        <!-- Token value con copy -->
-        <div class="token-value-container">
+        <!-- Token value con copy - Solo visible para usuarios con permisos -->
+        <div v-if="canViewTokenDetails" class="token-value-container">
           <div class="token-label">Token</div>
           <div class="token-value">
             <code>{{ token.token }}</code>
@@ -324,6 +325,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useClientTokens } from '@/composables/useClientTokens'
+import { useAuth } from '@/composables/useAuth'
 import type { ClientToken } from '@/types/ClientTokenType'
 
 const {
@@ -338,6 +340,8 @@ const {
   deleteToken,
   validateToken
 } = useClientTokens()
+
+const { canViewTokenDetails, canDeleteTokens } = useAuth()
 
 // Estado local
 const searchQuery = ref('')
@@ -592,14 +596,17 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  opacity: 0.9;
+  font-size: 1rem;
+  opacity: 1;
   margin-bottom: 0.25rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .stat-value {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Toolbar */
@@ -623,10 +630,17 @@ onMounted(() => {
   flex: 1;
   min-width: 250px;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   transition: border-color 0.2s;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .search-input:focus {
@@ -636,11 +650,18 @@ onMounted(() => {
 
 .filter-select {
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
   background: white;
   cursor: pointer;
+}
+
+.filter-select option {
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .filter-buttons {
@@ -650,12 +671,13 @@ onMounted(() => {
 
 .filter-btn {
   padding: 0.75rem 1.25rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   background: white;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  font-weight: 500;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .filter-btn:hover {
@@ -667,6 +689,7 @@ onMounted(() => {
   background: #667eea;
   color: white;
   border-color: #667eea;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-create {
@@ -675,9 +698,10 @@ onMounted(() => {
   color: white;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-create:hover {
@@ -731,23 +755,23 @@ onMounted(() => {
 .token-status-badge {
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .token-status-badge.status-active {
   background: #d4fcee;
-  color: #11998e;
+  color: #047857;
 }
 
 .token-status-badge.status-expired {
   background: #ffe0e6;
-  color: #f5576c;
+  color: #dc2626;
 }
 
 .token-status-badge.status-inactive {
   background: #e2e8f0;
-  color: #4b6cb7;
+  color: #334155;
 }
 
 .token-actions {
@@ -811,14 +835,15 @@ onMounted(() => {
 }
 
 .client-name {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #0f172a;
 }
 
 .client-id {
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 600;
 }
 
 .token-value-container {
@@ -826,10 +851,10 @@ onMounted(() => {
 }
 
 .token-label {
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.9rem;
+  color: #334155;
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .token-value {
@@ -839,13 +864,15 @@ onMounted(() => {
   background: #f1f5f9;
   padding: 0.75rem;
   border-radius: 6px;
+  border: 1px solid #cbd5e1;
 }
 
 .token-value code {
   flex: 1;
   font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  color: #334155;
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 600;
   word-break: break-all;
 }
 
@@ -883,20 +910,21 @@ onMounted(() => {
 }
 
 .expiration-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #78350f;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .expiration-date {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #92400e;
   margin-top: 0.25rem;
+  font-weight: 600;
 }
 
 .expiration-countdown {
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: 1.125rem;
+  font-weight: 700;
   color: #b45309;
   margin-top: 0.25rem;
 }
@@ -927,16 +955,17 @@ onMounted(() => {
 .metadata-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .metadata-label {
-  color: #64748b;
+  color: #475569;
+  font-weight: 700;
 }
 
 .metadata-value {
-  color: #1e293b;
-  font-weight: 500;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 /* Validator Section */
@@ -955,11 +984,13 @@ onMounted(() => {
 .validator-header h3 {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .validator-header p {
-  color: #64748b;
+  color: #475569;
+  font-weight: 600;
 }
 
 .validator-form {
@@ -972,9 +1003,16 @@ onMounted(() => {
 .validator-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.validator-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .btn-validate {
@@ -983,9 +1021,10 @@ onMounted(() => {
   color: white;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-validate:hover:not(:disabled) {
@@ -1009,12 +1048,12 @@ onMounted(() => {
 
 .validation-result.valid {
   background: #d4fcee;
-  border: 2px solid #11998e;
+  border: 2px solid #047857;
 }
 
 .validation-result.invalid {
   background: #ffe0e6;
-  border: 2px solid #f5576c;
+  border: 2px solid #dc2626;
 }
 
 .validation-icon {
@@ -1026,20 +1065,25 @@ onMounted(() => {
 }
 
 .validation-status {
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  color: #0f172a;
 }
 
 .validation-message {
-  font-size: 0.95rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
+  font-weight: 600;
+  color: #334155;
 }
 
 .validation-details {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: #475569;
 }
 
 .validation-details p {
@@ -1052,6 +1096,27 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
+}
+
+.loading-state p,
+.error-state p,
+.empty-state p {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 1rem;
+}
+
+.error-state .btn-retry {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .spinner {
@@ -1150,7 +1215,9 @@ onMounted(() => {
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .modal-close {
@@ -1158,7 +1225,8 @@ onMounted(() => {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #64748b;
+  color: #475569;
+  font-weight: 700;
 }
 
 .modal-body {
@@ -1172,16 +1240,24 @@ onMounted(() => {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #334155;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1rem;
 }
 
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .form-input:focus {
@@ -1192,8 +1268,9 @@ onMounted(() => {
 .form-hint {
   display: block;
   margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 600;
 }
 
 .modal-footer {
@@ -1210,24 +1287,26 @@ onMounted(() => {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s;
 }
 
 .btn-cancel {
   background: #e2e8f0;
-  color: #475569;
+  color: #0f172a;
 }
 
 .btn-confirm {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-delete {
   background: linear-gradient(135deg, #f5576c 0%, #e83b55 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-cancel:hover,
@@ -1244,8 +1323,9 @@ onMounted(() => {
 
 .warning-text {
   color: #dc2626;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 1rem;
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {

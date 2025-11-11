@@ -116,7 +116,11 @@
                 <button @click.stop="openTaskModal(task)" class="task-action-btn">
                   <span class="icon">✏️</span>
                 </button>
-                <button @click.stop="deleteTask(task.id)" class="task-action-btn delete">
+                <button 
+                  v-if="canDeleteTasks" 
+                  @click.stop="deleteTask(task.id)" 
+                  class="task-action-btn delete"
+                >
                   <span class="icon">🗑️</span>
                 </button>
               </div>
@@ -394,6 +398,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useTasks } from '@/composables/useTasks'
 import { useEmployees } from '@/composables/useEmployees'
 import { useClients } from '@/composables/useClients'
+import { useAuth } from '@/composables/useAuth'
 import type {
   Task,
   TeamMember,
@@ -406,6 +411,7 @@ import type {
 const { tasks: backendTasks, fetchTasks, createTask: createBackendTask, updateTask: updateBackendTask, deleteTask: deleteBackendTask } = useTasks()
 const { employees, fetchEmployees } = useEmployees()
 const { clients: backendClients, fetchClients } = useClients()
+const { canDeleteTasks } = useAuth()
 
 // Estado reactivo
 const showSidebar = ref(true)
@@ -440,6 +446,9 @@ const mapEmployeeRole = (role: 'ADMIN' | 'EMPLOYEE'): string => {
 
 // Mapear empleados del backend a TeamMembers
 const teamMembers = computed<TeamMember[]>(() => {
+  // Forzar recalculo cuando backendTasks cambie
+  const tasksCount = backendTasks.value.length
+
   return employees.value.map(emp => ({
     id: emp.id.toString(),
     name: emp.name,
@@ -467,12 +476,39 @@ const clients = computed<Client[]>(() => {
 
 // Función auxiliar para calcular carga de trabajo
 const calculateEmployeeWorkload = (employeeId: number): number => {
-  const employeeTasks = backendTasks.value.filter(task =>
-    task.employees?.some(emp => emp.id === employeeId) &&
-    (task.status === 'PENDING' || task.status === 'IN_PROGRESS')
-  )
-  const totalHours = employeeTasks.reduce((sum, task) => sum + (task.estimatedHours || 0), 0)
-  return Math.min(100, (totalHours / 40) * 100) // Asumiendo 40h semanales
+  // Obtener todas las tareas asignadas al empleado
+  const employeeTasks = backendTasks.value.filter(task => {
+    const hasInEmployees = task.employees?.some(emp => emp.id === employeeId)
+    const hasInEmployeeIds = task.employeeIds?.includes(employeeId)
+    return hasInEmployees || hasInEmployeeIds
+  })
+
+  if (employeeTasks.length === 0) return 0
+
+  // Contar tareas por estado
+  const totalTasks = employeeTasks.length
+  const pendingTasks = employeeTasks.filter(task => task.status === 'PENDING').length
+  const inProgressTasks = employeeTasks.filter(task => task.status === 'IN_PROGRESS').length
+  const completedTasks = employeeTasks.filter(task => task.status === 'COMPLETED').length
+
+  // Calcular porcentaje de progreso:
+  // - Tareas pendientes = 0% cada una
+  // - Tareas en progreso = 50% cada una (a la mitad)
+  // - Tareas completadas = 100% cada una
+  const progressPoints = (inProgressTasks * 50) + (completedTasks * 100)
+  const totalPoints = totalTasks * 100
+  const workload = totalPoints > 0 ? Math.round((progressPoints / totalPoints) * 100) : 0
+
+  // Log para debugging
+  console.log(`📊 Workload para empleado ${employeeId}:`, {
+    totalTareas: totalTasks,
+    pendientes: pendingTasks,
+    enProgreso: inProgressTasks,
+    completadas: completedTasks,
+    porcentaje: workload
+  })
+
+  return workload
 }
 
 // Mapear estados del backend a estados del Kanban

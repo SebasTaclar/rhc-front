@@ -50,6 +50,7 @@
             <span class="tab-label">Tipos de Tarea</span>
           </button>
           <button
+            v-if="canViewTokens"
             @click="activeTab = 'clientTokens'"
             class="tab"
             :class="{ active: activeTab === 'clientTokens' }"
@@ -74,7 +75,7 @@
         <EmployeeManagement v-if="activeTab === 'employees'" />
         <ClientManagement v-if="activeTab === 'clients'" />
         <TaskTypeManagement v-if="activeTab === 'taskTypes'" />
-        <ClientTokenManagement v-if="activeTab === 'clientTokens'" />
+        <ClientTokenManagement v-if="activeTab === 'clientTokens' && canViewTokens" />
         <EventManagement v-if="activeTab === 'events'" />
       </div>
     </div>
@@ -85,6 +86,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/api/authService'
+import { useAuth } from '@/composables/useAuth'
 import TeamManagementBoard from '@/components/TeamManagementBoard.vue'
 import EmployeeManagement from '@/components/EmployeeManagement.vue'
 import ClientManagement from '@/components/ClientManagement.vue'
@@ -97,10 +99,18 @@ defineOptions({
 })
 
 const router = useRouter()
+const { canViewTokens } = useAuth()
 const activeTab = ref<'teams' | 'employees' | 'clients' | 'taskTypes' | 'clientTokens' | 'events'>('teams')
 
-// Admin guard
-if (!authService.isAdmin()) {
+// Admin guard - Permitir admin y empleados
+const hasAccess = authService.canAccessAdmin()
+
+console.log('🔐 RHCAccessView - Current user:', authService.getCurrentUser())
+console.log('🔐 RHCAccessView - User role:', authService.getUserRole())
+console.log('🔐 RHCAccessView - Has access:', hasAccess)
+
+if (!hasAccess) {
+  console.log('🚫 RHCAccessView - Access denied, redirecting to home')
   router.push('/')
 }
 </script>
