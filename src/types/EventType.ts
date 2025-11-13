@@ -1,5 +1,13 @@
 export type EventType = 'MEETING' | 'DEADLINE' | 'REMINDER' | 'OTHER'
 
+export interface EventDocument {
+  id?: number
+  name: string
+  url: string
+  description?: string
+  uploadedAt?: string
+}
+
 export interface Event {
   id: number
   title: string
@@ -13,6 +21,7 @@ export interface Event {
   createdBy?: number
   createdAt: string
   updatedAt?: string
+  documents?: EventDocument[]
   // Relaciones opcionales
   clients?: Array<{ id: number; businessName: string }>
   employees?: Array<{ id: number; name: string }>
@@ -28,6 +37,7 @@ export interface PublicEvent {
   eventType: EventType
   isPrivate: boolean
   createdAt: string
+  documents?: EventDocument[]
 }
 
 export interface CreateEventRequest {
@@ -39,6 +49,11 @@ export interface CreateEventRequest {
   isPrivate?: boolean
   clientIds?: number[]
   employeeIds?: number[]
+  documents?: Array<{
+    name: string
+    url: string
+    description?: string
+  }>
 }
 
 export interface UpdateEventRequest {
@@ -50,6 +65,11 @@ export interface UpdateEventRequest {
   isPrivate?: boolean
   clientIds?: number[]
   employeeIds?: number[]
+  documents?: Array<{
+    name: string
+    url: string
+    description?: string
+  }>
 }
 
 export interface ValidateTokenWithEventsResponse {

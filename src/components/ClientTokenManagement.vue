@@ -325,6 +325,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useClientTokens } from '@/composables/useClientTokens'
+import { useClients } from '@/composables/useClients'
 import { useAuth } from '@/composables/useAuth'
 import type { ClientToken } from '@/types/ClientTokenType'
 
@@ -340,6 +341,12 @@ const {
   deleteToken,
   validateToken
 } = useClientTokens()
+
+const {
+  clients,
+  loading: clientsLoading,
+  fetchClients
+} = useClients()
 
 const { canViewTokenDetails, canDeleteTokens } = useAuth()
 
@@ -358,15 +365,9 @@ const newToken = ref({
 })
 const renewValidityMinutes = ref(43200)
 
-// Computed
+// Computed - Usar todos los clientes del sistema
 const uniqueClients = computed(() => {
-  const clientMap = new Map()
-  tokens.value.forEach(token => {
-    if (token.client && !clientMap.has(token.client.id)) {
-      clientMap.set(token.client.id, token.client)
-    }
-  })
-  return Array.from(clientMap.values())
+  return clients.value
 })
 
 const activeTokensCount = computed(() =>
@@ -535,8 +536,11 @@ const handleValidateToken = async () => {
   await validateToken(tokenToValidate.value)
 }
 
-onMounted(() => {
-  fetchTokens()
+onMounted(async () => {
+  await Promise.all([
+    fetchTokens(),
+    fetchClients()
+  ])
 })
 </script>
 

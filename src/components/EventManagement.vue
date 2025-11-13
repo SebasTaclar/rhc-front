@@ -67,10 +67,10 @@
             <button @click="openEditModal(event)" class="btn-icon" title="Editar">
               ✏️
             </button>
-            <button 
-              v-if="canDeleteEvents" 
-              @click="confirmDelete(event)" 
-              class="btn-icon danger" 
+            <button
+              v-if="canDeleteEvents"
+              @click="confirmDelete(event)"
+              class="btn-icon danger"
               title="Eliminar"
             >
               🗑️
@@ -105,6 +105,27 @@
           <div v-if="event.employees?.length" class="association-group">
             <span class="association-label">👔 Empleados:</span>
             <span class="association-count">{{ event.employees.length }}</span>
+          </div>
+        </div>
+
+        <!-- Documentos -->
+        <div v-if="event.documents && event.documents.length > 0" class="event-documents">
+          <div class="documents-header">
+            <span class="documents-label">📎 Documentos:</span>
+            <span class="documents-count">{{ event.documents.length }}</span>
+          </div>
+          <div class="documents-grid">
+            <a
+              v-for="(doc, index) in event.documents"
+              :key="index"
+              :href="doc.url"
+              target="_blank"
+              class="document-link"
+              :title="doc.description || doc.name"
+            >
+              <span class="doc-icon">📄</span>
+              <span class="doc-name">{{ doc.name }}</span>
+            </a>
           </div>
         </div>
       </div>
@@ -237,6 +258,74 @@
             <small class="form-hint">Los empleados asociados recibirán notificaciones</small>
           </div>
 
+          <!-- Documentos -->
+          <div class="form-group documents-section">
+            <label>
+              📎 Documentos Adjuntos (Opcional)
+              <span v-if="formData.documents && formData.documents.length > 0" class="selected-count">
+                {{ formData.documents.length }} documento{{ formData.documents.length > 1 ? 's' : '' }}
+              </span>
+            </label>
+
+            <div class="documents-list">
+              <div
+                v-for="(doc, index) in formData.documents"
+                :key="index"
+                class="document-item"
+              >
+                <div class="document-icon">📄</div>
+                <div class="document-info">
+                  <div class="document-name">{{ doc.name }}</div>
+                  <div class="document-url">{{ doc.url }}</div>
+                  <div v-if="doc.description" class="document-description">{{ doc.description }}</div>
+                </div>
+                <button
+                  type="button"
+                  @click="removeDocument(index)"
+                  class="btn-remove-doc"
+                  title="Eliminar documento"
+                >
+                  ✖️
+                </button>
+              </div>
+
+              <div v-if="!formData.documents || formData.documents.length === 0" class="no-documents">
+                <span class="empty-icon">📭</span>
+                <p>No hay documentos adjuntos</p>
+              </div>
+            </div>
+
+            <div class="add-document-form">
+              <input
+                v-model="newDocument.name"
+                type="text"
+                placeholder="Nombre del documento"
+                class="form-input-small"
+              />
+              <input
+                v-model="newDocument.url"
+                type="url"
+                placeholder="URL del documento"
+                class="form-input-small"
+              />
+              <input
+                v-model="newDocument.description"
+                type="text"
+                placeholder="Descripción (opcional)"
+                class="form-input-small"
+              />
+              <button
+                type="button"
+                @click="addDocument"
+                class="btn-add-doc"
+                :disabled="!newDocument.name || !newDocument.url"
+              >
+                ➕ Agregar
+              </button>
+            </div>
+            <small class="form-hint">Adjunta documentos relevantes como PDFs, hojas de cálculo, presentaciones, etc.</small>
+          </div>
+
           <div class="form-actions">
             <button type="button" @click="closeModal" class="btn-cancel">
               Cancelar
@@ -308,8 +397,43 @@ const formData = ref<CreateEventRequest | UpdateEventRequest>({
   eventType: 'OTHER',
   isPrivate: true,
   clientIds: [],
-  employeeIds: []
+  employeeIds: [],
+  documents: []
 })
+
+// Nuevo documento temporal
+const newDocument = ref({
+  name: '',
+  url: '',
+  description: ''
+})
+
+// Función para agregar documento
+const addDocument = () => {
+  if (newDocument.value.name && newDocument.value.url) {
+    if (!formData.value.documents) {
+      formData.value.documents = []
+    }
+    formData.value.documents.push({
+      name: newDocument.value.name,
+      url: newDocument.value.url,
+      description: newDocument.value.description || undefined
+    })
+    // Limpiar formulario
+    newDocument.value = {
+      name: '',
+      url: '',
+      description: ''
+    }
+  }
+}
+
+// Función para eliminar documento
+const removeDocument = (index: number) => {
+  if (formData.value.documents) {
+    formData.value.documents.splice(index, 1)
+  }
+}
 
 // Función para obtener iniciales
 const getInitials = (name: string): string => {
@@ -409,7 +533,14 @@ const openCreateModal = () => {
     eventType: 'OTHER',
     isPrivate: true,
     clientIds: [],
-    employeeIds: []
+    employeeIds: [],
+    documents: []
+  }
+  // Limpiar nuevo documento
+  newDocument.value = {
+    name: '',
+    url: '',
+    description: ''
   }
   showModal.value = true
 }
@@ -431,11 +562,23 @@ const openEditModal = (event: Event) => {
     eventType: event.eventType,
     isPrivate: event.isPrivate,
     clientIds: clientIdsToUse,
-    employeeIds: employeeIdsToUse
+    employeeIds: employeeIdsToUse,
+    documents: event.documents ? [...event.documents.map(doc => ({
+      name: doc.name,
+      url: doc.url,
+      description: doc.description
+    }))] : []
   }
 
   // Inicializar cliente seleccionado
   selectedClientId.value = clientIdsToUse.length > 0 ? clientIdsToUse[0] : ''
+
+  // Limpiar nuevo documento
+  newDocument.value = {
+    name: '',
+    url: '',
+    description: ''
+  }
 
   showModal.value = true
 }
@@ -444,6 +587,12 @@ const closeModal = () => {
   showModal.value = false
   isEditing.value = false
   selectedClientId.value = ''
+  // Limpiar nuevo documento
+  newDocument.value = {
+    name: '',
+    url: '',
+    description: ''
+  }
   formData.value = {
     title: '',
     description: '',
@@ -847,8 +996,8 @@ onMounted(async () => {
 .modal-content {
   background: white;
   border-radius: 16px;
-  max-width: 600px;
-  width: 100%;
+  max-width: 800px;
+  width: 95%;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
@@ -1153,6 +1302,241 @@ onMounted(async () => {
   margin-left: 0.5rem;
 }
 
+/* Estilos para documentos en tarjetas */
+.event-documents {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.documents-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.documents-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+.documents-count {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.documents-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.document-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.document-link:hover {
+  background: #e2e8f0;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+}
+
+.doc-icon {
+  font-size: 1.125rem;
+}
+
+.doc-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estilos para sección de documentos en formulario */
+.documents-section {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+}
+
+.documents-list {
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.document-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.document-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.document-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.document-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.document-name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.document-url {
+  font-size: 0.8125rem;
+  color: #667eea;
+  font-weight: 500;
+  word-break: break-all;
+  margin-bottom: 0.25rem;
+}
+
+.document-description {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.btn-remove-doc {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.btn-remove-doc:hover {
+  background: #fecaca;
+  transform: scale(1.1);
+}
+
+.no-documents {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.no-documents p {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-document-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.add-document-form .form-input-small:nth-child(3) {
+  grid-column: 1 / 2;
+}
+
+.add-document-form .btn-add-doc {
+  grid-column: 2 / 3;
+  justify-self: end;
+  min-width: 140px;
+}
+
+.form-input-small {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-input-small:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-input-small::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.btn-add-doc {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-add-doc:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-add-doc:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .management-header {
@@ -1178,6 +1562,14 @@ onMounted(async () => {
 
   .modal-content {
     max-height: 95vh;
+  }
+
+  .add-document-form {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-name {
+    max-width: 100px;
   }
 }
 </style>

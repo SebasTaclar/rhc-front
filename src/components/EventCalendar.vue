@@ -28,7 +28,8 @@
             {
               'other-month': day.isOtherMonth,
               'today': day.isToday,
-              'has-events': day.events.length > 0
+              'has-events': day.events.length > 0,
+              'clickable': isAdmin || day.events.length > 0
             }
           ]"
           @click="openDayDetails(day)"
@@ -99,6 +100,7 @@ import type { Event, PublicEvent } from '@/types/EventType'
 interface Props {
   events: (Event | PublicEvent)[]
   canEdit?: boolean
+  isAdmin?: boolean
 }
 
 interface CalendarDay {
@@ -110,12 +112,14 @@ interface CalendarDay {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  canEdit: false
+  canEdit: false,
+  isAdmin: false
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'edit-event': [event: Event | PublicEvent]
   'delete-event': [eventId: number]
+  'day-click': [date: string, events: (Event | PublicEvent)[]]
 }>()
 
 const currentDate = ref(new Date())
@@ -218,9 +222,9 @@ const nextMonth = () => {
 
 // Abrir detalles del día
 const openDayDetails = (day: CalendarDay) => {
-  if (day.events.length > 0 && !day.isOtherMonth) {
-    // Aquí puedes implementar un modal con los detalles del día
-    console.log('Day details:', day)
+  // Emitir evento al padre con la fecha y eventos, sin importar si el día tiene eventos o no
+  if (!day.isOtherMonth) {
+    emit('day-click', day.date, day.events)
   }
 }
 
@@ -333,12 +337,16 @@ const formatEventType = (type: string): string => {
   background: white;
   min-height: 100px;
   padding: 0.5rem;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.2s ease;
   position: relative;
 }
 
-.calendar-day:hover {
+.calendar-day.clickable {
+  cursor: pointer;
+}
+
+.calendar-day.clickable:hover {
   background: #f8fafc;
 }
 
@@ -433,8 +441,8 @@ const formatEventType = (type: string): string => {
 }
 
 .events-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1rem;
 }
 
@@ -583,6 +591,10 @@ const formatEventType = (type: string): string => {
 
   .event-title {
     font-size: 0.625rem;
+  }
+
+  .events-list {
+    grid-template-columns: 1fr;
   }
 
   .event-card {

@@ -132,10 +132,10 @@ router.beforeEach((to, from, next) => {
         next('/')
         return
       }
-      
+
       const userRoleLower = userRole.toLowerCase()
       const requiredRolesLower = to.meta.requiredRoles.map((r: string) => r.toLowerCase())
-      
+
       if (!requiredRolesLower.includes(userRoleLower)) {
         console.log('🛣️ Router Guard - Role not in requiredRoles, redirecting to home')
         console.log('🛣️ User role (lower):', userRoleLower)

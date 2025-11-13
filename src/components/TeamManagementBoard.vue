@@ -116,9 +116,9 @@
                 <button @click.stop="openTaskModal(task)" class="task-action-btn">
                   <span class="icon">✏️</span>
                 </button>
-                <button 
-                  v-if="canDeleteTasks" 
-                  @click.stop="deleteTask(task.id)" 
+                <button
+                  v-if="canDeleteTasks"
+                  @click.stop="deleteTask(task.id)"
                   class="task-action-btn delete"
                 >
                   <span class="icon">🗑️</span>
@@ -453,7 +453,7 @@ const teamMembers = computed<TeamMember[]>(() => {
     id: emp.id.toString(),
     name: emp.name,
     email: emp.email,
-    role: mapEmployeeRole(emp.role),
+    role: mapEmployeeRole(emp.userRole || 'EMPLOYEE'),
     skills: [], // El backend no tiene skills
     location: 'oficina' as const,
     status: 'disponible' as const,
@@ -578,7 +578,7 @@ const tasks = computed<Task[]>(() => {
           id: emp.id.toString(),
           name: emp.name,
           email: fullEmployee?.email || '',
-          role: fullEmployee ? mapEmployeeRole(fullEmployee.role) : 'Empleado',
+          role: fullEmployee ? mapEmployeeRole(fullEmployee.userRole || 'EMPLOYEE') : 'Empleado',
           skills: [],
           location: 'oficina' as const,
           status: 'disponible' as const,
@@ -598,7 +598,7 @@ const tasks = computed<Task[]>(() => {
               id: empId.toString(),
               name: fullEmployee.name,
               email: fullEmployee.email,
-              role: mapEmployeeRole(fullEmployee.role),
+              role: mapEmployeeRole(fullEmployee.userRole || 'EMPLOYEE'),
               skills: [] as string[],
               location: 'oficina' as const,
               status: 'disponible' as const,

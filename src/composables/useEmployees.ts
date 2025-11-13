@@ -1,6 +1,10 @@
 import { ref } from 'vue'
 import { employeeService } from '@/services/api/employeeService'
-import type { Employee, CreateEmployeeRequest, UpdateEmployeeRequest } from '@/types/EmployeeType'
+import type {
+  Employee,
+  CreateEmployeeRequest,
+  UpdateEmployeeRequest
+} from '@/types/EmployeeType'
 
 export const useEmployees = () => {
   const employees = ref<Employee[]>([])
@@ -21,17 +25,24 @@ export const useEmployees = () => {
     }
   }
 
-  // Crear nuevo empleado
+  /**
+   * Crear nuevo empleado
+   * - Si no existe usuario con el email, se crea automáticamente
+   * - Contraseña por defecto: 1234567!
+   * - userRole por defecto: EMPLOYEE (si no se especifica)
+   */
   const createEmployee = async (data: CreateEmployeeRequest): Promise<Employee | null> => {
     loading.value = true
     error.value = null
     try {
+      console.log('📤 Enviando al backend:', data)
       const newEmployee = await employeeService.create(data)
+      console.log('📥 Respuesta del backend:', newEmployee)
       employees.value.push(newEmployee)
       return newEmployee
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Error al crear empleado'
-      console.error('Error creating employee:', err)
+      console.error('❌ Error creating employee:', err)
       return null
     } finally {
       loading.value = false
@@ -58,7 +69,11 @@ export const useEmployees = () => {
     }
   }
 
-  // Eliminar empleado
+  /**
+   * Eliminar empleado
+   * - Si tiene usuario asociado, se elimina automáticamente
+   * - Eliminación en cascada
+   */
   const deleteEmployee = async (id: number): Promise<boolean> => {
     loading.value = true
     error.value = null
@@ -110,6 +125,58 @@ export const useEmployees = () => {
     }
   }
 
+  /**
+   * Cambiar contraseña de empleado (Solo ADMIN)
+   * - El empleado debe tener usuario asociado
+   * - Se registra en logs para auditoría
+   */
+  const changeEmployeePassword = async (id: number, newPassword: string): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+    try {
+      await employeeService.changePassword(id, { newPassword })
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error al cambiar contraseña del empleado'
+      console.error('Error changing employee password:', err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Cambiar rol de usuario de empleado (Solo ADMIN)
+   * - El empleado debe tener usuario asociado
+   * - Valores válidos: ADMIN o EMPLOYEE
+   * - Se registra en logs para auditoría
+   */
+  const changeEmployeeUserRole = async (
+    id: number,
+    userRole: 'ADMIN' | 'EMPLOYEE'
+  ): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await employeeService.changeUserRole(id, { userRole })
+      // Actualizar el empleado en la lista local
+      const index = employees.value.findIndex(emp => emp.id === id)
+      if (index !== -1) {
+        employees.value[index] = {
+          ...employees.value[index],
+          userRole: response.newUserRole
+        }
+      }
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error al cambiar rol del empleado'
+      console.error('Error changing employee user role:', err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     employees,
     loading,
@@ -119,6 +186,8 @@ export const useEmployees = () => {
     updateEmployee,
     deleteEmployee,
     toggleEmployeeActive,
-    getEmployeeById
+    getEmployeeById,
+    changeEmployeePassword,
+    changeEmployeeUserRole
   }
 }

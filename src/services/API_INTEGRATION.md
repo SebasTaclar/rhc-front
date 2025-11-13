@@ -113,7 +113,195 @@ const { isAuthenticated, currentUser, isAdmin, userRole, userName, login, logout
 - El código existente sigue funcionando sin cambios
 - Migración transparente desde autenticación mock a real
 
-## 🚀 Próximos Pasos
+## � Gestión de Empleados
+
+### Conceptos Importantes
+
+El sistema de empleados diferencia entre dos tipos de roles:
+
+- **`role`** (Rol Organizacional): String libre que define el departamento o función del empleado
+  - Ejemplos: "RECURSOS HUMANOS", "CONTABILIDAD", "GERENCIA GENERAL", "AUDITORÍA"
+  
+- **`userRole`** (Rol de Sistema): Define permisos de acceso al sistema
+  - Valores: `"ADMIN"` o `"EMPLOYEE"`
+  - Por defecto: `"EMPLOYEE"`
+
+### Comportamientos Automáticos
+
+#### ✨ Creación de Empleado
+
+- Si **no existe un usuario** con el email del empleado → Se crea automáticamente
+- **Contraseña por defecto**: `1234567!`
+- **userRole por defecto**: `EMPLOYEE` (si no se especifica)
+- Se puede vincular a usuario existente con `userId`
+
+#### 🗑️ Eliminación de Empleado
+
+- Si el empleado tiene usuario asociado → **Se elimina automáticamente**
+- **Eliminación en cascada**: Usuario → Empleado
+- Registrado en logs para auditoría
+
+### Endpoints Disponibles
+
+#### 1. Crear Empleado
+
+```typescript
+import { useEmployees } from '@/composables/useEmployees'
+
+const { createEmployee } = useEmployees()
+
+// Con userRole específico
+await createEmployee({
+  name: 'Juan Carlos Pérez',
+  email: 'juan.perez@rhc.com.co',
+  role: 'GERENCIA GENERAL', // Rol organizacional
+  userRole: 'ADMIN', // Rol de sistema
+  active: true
+})
+
+// Sin userRole (por defecto EMPLOYEE)
+await createEmployee({
+  name: 'María González',
+  email: 'maria.gonzalez@rhc.com.co',
+  role: 'RECURSOS HUMANOS',
+  active: true
+})
+
+// Con userId existente
+await createEmployee({
+  name: 'Carlos Rodríguez',
+  email: 'carlos.rodriguez@rhc.com.co',
+  role: 'CONTABILIDAD',
+  userId: 1, // Vincular a usuario existente
+  active: true
+})
+```
+
+#### 2. Listar Empleados
+
+```typescript
+const { fetchEmployees, employees } = useEmployees()
+
+await fetchEmployees()
+console.log(employees.value)
+```
+
+#### 3. Obtener Empleado por ID
+
+```typescript
+const { getEmployeeById } = useEmployees()
+
+const employee = await getEmployeeById(1)
+```
+
+#### 4. Actualizar Empleado
+
+```typescript
+const { updateEmployee } = useEmployees()
+
+// Actualizar datos
+await updateEmployee(1, {
+  name: 'Juan Carlos Pérez Silva',
+  role: 'DIRECTOR GENERAL',
+  active: false
+})
+
+// Vincular usuario
+await updateEmployee(1, {
+  userId: 2
+})
+
+// Desvincular usuario
+await updateEmployee(1, {
+  userId: null
+})
+```
+
+#### 5. Cambiar Estado (Activar/Desactivar)
+
+```typescript
+const { toggleEmployeeActive } = useEmployees()
+
+await toggleEmployeeActive(1, false) // Desactivar
+await toggleEmployeeActive(1, true) // Activar
+```
+
+#### 6. Eliminar Empleado
+
+```typescript
+const { deleteEmployee } = useEmployees()
+
+await deleteEmployee(1)
+// Si tiene usuario asociado, se elimina automáticamente
+```
+
+#### 7. Cambiar Contraseña (Solo ADMIN)
+
+```typescript
+const { changeEmployeePassword } = useEmployees()
+
+await changeEmployeePassword(1, 'nuevaContraseña123!')
+```
+
+**Requisitos**:
+- Usuario actual debe tener rol `ADMIN`
+- El empleado debe tener usuario asociado
+- La contraseña se valida según reglas de seguridad
+- Se registra en logs para auditoría
+
+#### 8. Cambiar Rol de Sistema (Solo ADMIN)
+
+```typescript
+const { changeEmployeeUserRole } = useEmployees()
+
+await changeEmployeeUserRole(1, 'ADMIN') // Cambiar a Administrador
+await changeEmployeeUserRole(1, 'EMPLOYEE') // Cambiar a Empleado
+```
+
+**Requisitos**:
+- Usuario actual debe tener rol `ADMIN`
+- El empleado debe tener usuario asociado
+- Valores válidos: `"ADMIN"` o `"EMPLOYEE"`
+- Se registra en logs para auditoría
+
+### Sistema de Permisos
+
+El composable `useAuth` proporciona permisos granulares:
+
+```typescript
+import { useAuth } from '@/composables/useAuth'
+
+const {
+  canManageEmployees, // Crear, editar, eliminar empleados
+  canDeleteEvents,
+  canDeleteTasks,
+  canDeleteClients,
+  canViewTokens,
+  canViewTokenDetails,
+  canDeleteTokens
+} = useAuth()
+```
+
+**Restricciones para rol EMPLOYEE**:
+- ❌ No puede eliminar eventos
+- ❌ No puede eliminar tareas
+- ❌ No puede eliminar clientes
+- ❌ No puede crear/editar/eliminar empleados
+- ❌ No puede ver tokens
+- ❌ No puede ver detalles de tokens
+- ❌ No puede eliminar tokens
+- ✅ Puede ver y editar tareas/clientes/eventos
+
+### Componente EmployeeManagement
+
+El componente incluye:
+- Tabla con roles organizacionales y de sistema
+- Formulario de creación con campo `userRole`
+- Botón 🔑 para cambiar contraseña (solo si tiene usuario)
+- Botón 👤 para cambiar rol de sistema (solo si tiene usuario)
+- Botones ocultos para empleados según permisos
+
+## �🚀 Próximos Pasos
 
 Para extender la integración del backend:
 
