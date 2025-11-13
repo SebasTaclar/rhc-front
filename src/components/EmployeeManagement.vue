@@ -2,9 +2,9 @@
   <div class="employee-management">
     <div class="header">
       <h2>Gestión de Empleados</h2>
-      <button 
-        v-if="canManageEmployees" 
-        @click="openCreateModal" 
+      <button
+        v-if="canManageEmployees"
+        @click="openCreateModal"
         class="btn btn-primary"
       >
         <span class="icon">+</span>
@@ -31,7 +31,8 @@
           <tr>
             <th>Nombre</th>
             <th>Email</th>
-            <th>Rol</th>
+            <th>Rol Organizacional</th>
+            <th>Rol Sistema</th>
             <th>Estado</th>
             <th>Acciones</th>
           </tr>
@@ -41,8 +42,16 @@
             <td>{{ employee.name }}</td>
             <td>{{ employee.email }}</td>
             <td>
-              <span class="badge" :class="employee.role.toLowerCase()">
-                {{ employee.role === 'ADMIN' ? 'Administrador' : 'Empleado' }}
+              <span class="badge role-badge">
+                {{ employee.role }}
+              </span>
+            </td>
+            <td>
+              <span
+                class="badge"
+                :class="employee.userRole?.toUpperCase() === 'ADMIN' ? 'admin' : 'employee'"
+              >
+                {{ employee.userRole?.toUpperCase() === 'ADMIN' ? 'Administrador' : 'Empleado' }}
               </span>
             </td>
             <td>
@@ -51,13 +60,29 @@
               </span>
             </td>
             <td class="actions">
-              <button 
-                v-if="canManageEmployees" 
-                @click="openEditModal(employee)" 
-                class="btn-icon" 
+              <button
+                v-if="canManageEmployees"
+                @click="openEditModal(employee)"
+                class="btn-icon"
                 title="Editar"
               >
                 ✏️
+              </button>
+              <button
+                v-if="canManageEmployees && employee.userId"
+                @click="openChangePasswordModal(employee)"
+                class="btn-icon"
+                title="Cambiar Contraseña"
+              >
+                🔑
+              </button>
+              <button
+                v-if="canManageEmployees && employee.userId"
+                @click="openChangeUserRoleModal(employee)"
+                class="btn-icon"
+                title="Cambiar Rol Sistema"
+              >
+                👤
               </button>
               <button
                 v-if="canManageEmployees"
@@ -67,10 +92,10 @@
               >
                 {{ employee.active ? '🔒' : '🔓' }}
               </button>
-              <button 
-                v-if="canManageEmployees" 
-                @click="confirmDelete(employee)" 
-                class="btn-icon delete" 
+              <button
+                v-if="canManageEmployees"
+                @click="confirmDelete(employee)"
+                class="btn-icon delete"
                 title="Eliminar"
               >
                 🗑️
@@ -119,11 +144,24 @@
           </div>
 
           <div class="form-group">
-            <label>Rol *</label>
-            <select v-model="formData.role" class="form-select" required>
-              <option value="ADMIN">Administrador</option>
+            <label>Rol Organizacional *</label>
+            <input
+              v-model="formData.role"
+              type="text"
+              class="form-input"
+              required
+              placeholder="Ej: RECURSOS HUMANOS, CONTABILIDAD, GERENCIA GENERAL"
+            />
+            <small class="form-hint">Departamento o función del empleado</small>
+          </div>
+
+          <div class="form-group" v-if="!isEditMode">
+            <label>Rol de Sistema</label>
+            <select v-model="formData.userRole" class="form-select">
               <option value="EMPLOYEE">Empleado</option>
+              <option value="ADMIN">Administrador</option>
             </select>
+            <small class="form-hint">Permisos de acceso al sistema (por defecto: Empleado)</small>
           </div>
 
           <div class="form-group checkbox-group">
@@ -165,6 +203,78 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div v-if="showPasswordModal" class="modal-overlay" @click="closePasswordModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Cambiar Contraseña</h3>
+          <button @click="closePasswordModal" class="close-btn">&times;</button>
+        </div>
+        <form @submit.prevent="handleChangePassword" class="modal-body">
+          <p class="info-text">Empleado: <strong>{{ selectedEmployee?.name }}</strong></p>
+          <div class="form-group">
+            <label>Nueva Contraseña *</label>
+            <input
+              v-model="newPassword"
+              type="password"
+              class="form-input"
+              required
+              minlength="8"
+              placeholder="Mínimo 8 caracteres"
+            />
+          </div>
+          <div class="form-group">
+            <label>Confirmar Contraseña *</label>
+            <input
+              v-model="confirmPassword"
+              type="password"
+              class="form-input"
+              required
+              placeholder="Confirmar contraseña"
+            />
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="closePasswordModal" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="loading">
+              Cambiar Contraseña
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Cambiar Rol Sistema -->
+    <div v-if="showUserRoleModal" class="modal-overlay" @click="closeUserRoleModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Cambiar Rol de Sistema</h3>
+          <button @click="closeUserRoleModal" class="close-btn">&times;</button>
+        </div>
+        <form @submit.prevent="handleChangeUserRole" class="modal-body">
+          <p class="info-text">Empleado: <strong>{{ selectedEmployee?.name }}</strong></p>
+          <p class="info-text">Rol actual: <strong>{{ selectedEmployee?.userRole === 'ADMIN' ? 'Administrador' : 'Empleado' }}</strong></p>
+          <div class="form-group">
+            <label>Nuevo Rol de Sistema *</label>
+            <select v-model="newUserRole" class="form-select" required>
+              <option value="EMPLOYEE">Empleado</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+            <small class="form-hint">Define los permisos de acceso al sistema</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="closeUserRoleModal" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="loading">
+              Cambiar Rol
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -182,20 +292,29 @@ const {
   createEmployee,
   updateEmployee,
   deleteEmployee,
-  toggleEmployeeActive
+  toggleEmployeeActive,
+  changeEmployeePassword,
+  changeEmployeeUserRole
 } = useEmployees()
 
 const { canManageEmployees } = useAuth()
 
 const showModal = ref(false)
 const showConfirmModal = ref(false)
+const showPasswordModal = ref(false)
+const showUserRoleModal = ref(false)
 const isEditMode = ref(false)
 const employeeToDelete = ref<Employee | null>(null)
+const selectedEmployee = ref<Employee | null>(null)
+const newPassword = ref('')
+const confirmPassword = ref('')
+const newUserRole = ref<'ADMIN' | 'EMPLOYEE'>('EMPLOYEE')
 
 const formData = ref({
   name: '',
   email: '',
-  role: 'EMPLOYEE' as 'ADMIN' | 'EMPLOYEE',
+  role: '', // Rol organizacional (string libre)
+  userRole: 'EMPLOYEE' as 'ADMIN' | 'EMPLOYEE', // Rol de sistema
   active: true,
   userId: undefined as number | undefined
 })
@@ -213,7 +332,8 @@ const openCreateModal = () => {
   formData.value = {
     name: '',
     email: '',
-    role: 'EMPLOYEE',
+    role: '',
+    userRole: 'EMPLOYEE',
     active: true,
     userId: undefined
   }
@@ -228,6 +348,7 @@ const openEditModal = (employee: Employee) => {
     name: employee.name,
     email: employee.email,
     role: employee.role,
+    userRole: employee.userRole || 'EMPLOYEE',
     active: employee.active,
     userId: employee.userId || undefined
   }
@@ -243,18 +364,34 @@ const closeModal = () => {
 
 // Manejar envío del formulario
 const handleSubmit = async () => {
-  const data = {
-    name: formData.value.name,
-    email: formData.value.email,
-    role: formData.value.role,
-    active: formData.value.active,
-    userId: formData.value.userId || null
-  }
-
   if (isEditMode.value && currentEmployeeId.value) {
+    // Al editar, no se envía userRole (se cambia con endpoint específico)
+    const data = {
+      name: formData.value.name,
+      email: formData.value.email,
+      role: formData.value.role,
+      active: formData.value.active,
+      userId: formData.value.userId || null
+    }
     await updateEmployee(currentEmployeeId.value, data)
   } else {
-    await createEmployee(data)
+    // Al crear, se incluye userRole
+    const data = {
+      name: formData.value.name,
+      email: formData.value.email,
+      role: formData.value.role,
+      active: formData.value.active,
+      userId: formData.value.userId || null,
+      userRole: formData.value.userRole
+    }
+    console.log('🔍 Creando empleado con datos:', data)
+    const result = await createEmployee(data)
+    console.log('✅ Empleado creado:', result)
+
+    // Recargar la lista completa para obtener datos actualizados del backend
+    if (!error.value && result) {
+      await fetchEmployees()
+    }
   }
 
   if (!error.value) {
@@ -279,6 +416,63 @@ const handleDelete = async () => {
     await deleteEmployee(employeeToDelete.value.id)
     showConfirmModal.value = false
     employeeToDelete.value = null
+  }
+}
+
+// Abrir modal cambiar contraseña
+const openChangePasswordModal = (employee: Employee) => {
+  selectedEmployee.value = employee
+  newPassword.value = ''
+  confirmPassword.value = ''
+  showPasswordModal.value = true
+}
+
+// Cerrar modal contraseña
+const closePasswordModal = () => {
+  showPasswordModal.value = false
+  selectedEmployee.value = null
+  newPassword.value = ''
+  confirmPassword.value = ''
+}
+
+// Cambiar contraseña
+const handleChangePassword = async () => {
+  if (newPassword.value !== confirmPassword.value) {
+    alert('Las contraseñas no coinciden')
+    return
+  }
+
+  if (selectedEmployee.value) {
+    const success = await changeEmployeePassword(selectedEmployee.value.id, newPassword.value)
+    if (success) {
+      alert('Contraseña cambiada exitosamente')
+      closePasswordModal()
+    }
+  }
+}
+
+// Abrir modal cambiar userRole
+const openChangeUserRoleModal = (employee: Employee) => {
+  selectedEmployee.value = employee
+  newUserRole.value = employee.userRole || 'EMPLOYEE'
+  showUserRoleModal.value = true
+}
+
+// Cerrar modal userRole
+const closeUserRoleModal = () => {
+  showUserRoleModal.value = false
+  selectedEmployee.value = null
+}
+
+// Cambiar userRole
+const handleChangeUserRole = async () => {
+  if (selectedEmployee.value) {
+    const success = await changeEmployeeUserRole(selectedEmployee.value.id, newUserRole.value)
+    if (success) {
+      alert('Rol de sistema cambiado exitosamente')
+      closeUserRoleModal()
+      await fetchEmployees() // Recargar lista para reflejar cambios
+    }
   }
 }
 </script>
@@ -429,6 +623,13 @@ const handleDelete = async () => {
   font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.badge.role-badge {
+  background: #e0f2fe;
+  color: #075985;
+  text-transform: none;
+  font-size: 0.75rem;
 }
 
 .badge.admin {
@@ -613,6 +814,20 @@ const handleDelete = async () => {
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: #64748b;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-text {
+  margin-bottom: 1rem;
+  color: #475569;
+  font-weight: 600;
 }
 
 .checkbox-group label {

@@ -39,7 +39,10 @@ export function useAuth() {
   }
 
   // Computeds para permisos
-  const isAdmin = computed(() => authService.isAdmin())
+  const isAdmin = computed(() => {
+    const role = currentUser.value?.role
+    return role === 'admin' || role === 'ADMIN'
+  })
   const userRole = computed(() => currentUser.value?.role || null)
   const userName = computed(() => currentUser.value?.name || '')
 
@@ -64,19 +67,19 @@ export function useAuth() {
     const role = userRole.value?.toLowerCase()
     return role === 'employee'
   })
-  
+
   // Permisos de eventos
   const canDeleteEvents = computed(() => !isEmployee.value)
-  
+
   // Permisos de tareas
   const canDeleteTasks = computed(() => !isEmployee.value)
-  
+
   // Permisos de clientes
   const canDeleteClients = computed(() => !isEmployee.value)
-  
+
   // Permisos de empleados
   const canManageEmployees = computed(() => !isEmployee.value) // Crear, editar, borrar
-  
+
   // Permisos de tokens
   const canViewTokens = computed(() => !isEmployee.value)
   const canViewTokenDetails = computed(() => !isEmployee.value)
@@ -102,7 +105,7 @@ export function useAuth() {
     canAccessOperativo,
     canAccessProducto,
     canAccessRecursosHumanos,
-    
+
     // Permisos específicos
     canDeleteEvents,
     canDeleteTasks,

@@ -150,9 +150,11 @@ class AuthService {
 
   /**
    * Verifica si el usuario es administrador
+   * El role puede ser 'admin' o 'ADMIN' dependiendo del sistema
    */
   isAdmin(): boolean {
-    return this.hasRole('admin')
+    const role = this.getUserRole()
+    return role === 'admin' || role === 'ADMIN'
   }
 
   /**

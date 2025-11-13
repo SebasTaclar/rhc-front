@@ -65,10 +65,10 @@
               <button @click="viewClient(client)" class="btn-icon" title="Ver detalles">
                 👁️
               </button>
-              <button 
-                v-if="canDeleteClients" 
-                @click="confirmDelete(client)" 
-                class="btn-icon delete" 
+              <button
+                v-if="canDeleteClients"
+                @click="confirmDelete(client)"
+                class="btn-icon delete"
                 title="Eliminar"
               >
                 🗑️
